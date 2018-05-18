@@ -44,9 +44,9 @@ class Foo(Task):
     def begin(self):
         super(Foo, self).begin()
         log.info('In begin step, hello world')
-	    ctx = self.ctx
+	ctx = self.ctx
         log.debug('ctx is: %r', ctx)
-	    remote.run(args=['sleep', '15'], stdout=StringIO())
+	remote.run(args=['sleep', '15'], stdout=StringIO())
 
     def teardown(self):
         log.info('Teardown step, hello world')
