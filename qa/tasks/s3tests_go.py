@@ -56,21 +56,21 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         s3_branches = ['wip-foo']
         for (client, cconf) in cluster.remotes.iteritems():
-            branch = cconf.get('force-branch', None)
-            if not branch:
-                ceph_branch = ctx.config.get('branch')
-                suite_branch = ctx.config.get('suite_branch')
-                if suite_branch in s3_branches:
-                    branch = cconf.get('branch', suite_branch)
-                else:
-                    branch = cconf.get('branch', 'ceph-' + suite_branch)
+            # branch = cconf.get('force-branch', None)
+            # if not branch:
+            #     ceph_branch = ctx.config.get('branch')
+            #     suite_branch = ctx.config.get('suite_branch')
+            #     if suite_branch in s3_branches:
+            #         branch = cconf.get('branch', suite_branch)
+            #     else:
+            #         branch = cconf.get('branch', 'ceph-' + suite_branch)
             # if not branch:
             #     raise ValueError(
             #         "S3 Tests Go: Could not determine what branch to use for s3tests!")
-            else:
-                log.info("S3 Tests Go: Using branch '%s' for s3tests", branch)
-            sha1 = cconf.get('sha1')
-            git_remote = cconf.get('git_remote', None) or teuth_config.ceph_git_base_url
+            # else:
+            #     log.info("S3 Tests Go: Using branch '%s' for s3tests; not used yet!", branch)
+            # sha1 = cconf.get('sha1')
+            # git_remote = cconf.get('git_remote', None) or teuth_config.ceph_git_base_url
             ctx.cluster.only(client).run(
                 args=[
                     'git', 'clone',
