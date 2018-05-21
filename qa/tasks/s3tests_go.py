@@ -4,7 +4,7 @@ Task for running RGW S3 tests with the AWS Go SDK
 from cStringIO import StringIO
 import logging
 
-from teuthology import misc
+from teuthology import misc as teuthology
 from teuthology.exceptions import ConfigError
 from teuthology.task import Task
 from teuthology.orchestra import run
