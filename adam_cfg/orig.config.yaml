@@ -1,0 +1,52 @@
+archive_path: /home/adamyanova/src/teuthology_logs
+email: null
+job_id: '123456'
+last_in_suite: false
+machine_type: smithi
+meta:
+- desc: run a ceph cluster with nfs ganesha
+name: adamyanova-job-1
+nuke-on-error: false 
+interactive-on-error: true 
+os_type: centos
+os_version: '7.4'
+overrides:
+  ceph:
+    conf:
+      client:
+        debug rgw: 20
+        rgw crypt require ssl: false
+        rgw crypt s3 kms encryption keys: testkey-1=YmluCmJvb3N0CmJvb3N0LWJ1aWxkCmNlcGguY29uZgo=
+          testkey-2=aWIKTWFrZWZpbGUKbWFuCm91dApzcmMKVGVzdGluZwo=
+        rgw lc debug interval: 10
+    wait_for_scrub: false 
+    fs: xfs
+  install:
+    ceph:
+      sha1: bd982ed0780633c6df6188ed3397d674e94d338e
+      #sha1: 4516870a52f5a6f02b47faf9a3c278e157d69f7a
+owner: scheduled_adamyanova@teuthology
+roles:
+- - mon.a
+  - mgr.c
+  - osd.0
+  - osd.1
+  - client.0
+branch: master 
+repo: https://github.com/ceph/ceph.git
+sha1: bd982ed0780633c6df6188ed3397d674e94d338e
+#sha1: 4516870a52f5a6f02b47faf9a3c278e157d69f7a
+suite_branch: wip-foo
+suite_path: /home/adamyanova/src/github.com_adamyanova_ceph_wip-foo/qa
+suite_relpath: qa
+suite_repo: https://github.com/adamyanova/ceph.git
+suite_sha1: e86db6bf503d1ff68125d8165653ab73aa2da916 
+tasks:
+- install: null
+- ceph:
+- rgw: 
+    client.0:
+- s3tests_go:
+teuthology_branch: master
+tube: smithi 
+verbose: true

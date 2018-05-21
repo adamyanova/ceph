@@ -56,6 +56,10 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         s3_branches = ['wip-foo']
         for (client, cconf) in cluster.remotes.iteritems():
+            ctx.cluster.run(
+                args=['echo', '"client is {clt}"'.format(clt = client)],
+                stdout=StringIO()
+            )
             # branch = cconf.get('force-branch', None)
             # if not branch:
             #     ceph_branch = ctx.config.get('branch')
@@ -81,12 +85,12 @@ class S3tests_go(Task):
                 stdout=StringIO()
                 )
             ctx.cluster.only(client).run(
-                args=['echo "{tdir}/s3-tests'.format(tdir=testdir)],
+                args=['echo', '"{tdir}/s3-tests'.format(tdir=testdir)],
                 stdout=StringIO()
             )
             ctx.cluster.only(client).run(
                 args=[
-                    'echo "$(ls {tdir}/s3-tests)"'.format(tdir=testdir),
+                    'echo', '"$(ls {tdir}/s3-tests)"'.format(tdir=testdir),
                     ], 
                 stdout=StringIO()
                 )
