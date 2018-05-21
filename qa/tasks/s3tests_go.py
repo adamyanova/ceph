@@ -78,12 +78,17 @@ class S3tests_go(Task):
                     'git@github.com:adamyanova/go_s3tests.git'
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
+                stdout=StringIO()
                 )
             ctx.cluster.only(client).run(
+                args=['echo "{tdir}/s3-tests'.format(tdir=testdir)],
+                stdout=StringIO()
+            )
+            ctx.cluster.only(client).run(
                 args=[
-                    'ls'
-                    '{tdir}/s3-tests'.format(tdir=testdir)
-                    ], stdout=StringIO()
+                    'echo "$(ls {tdir}/s3-tests)"'.format(tdir=testdir),
+                    ], 
+                stdout=StringIO()
                 )
 
     def remove_tests(self):
