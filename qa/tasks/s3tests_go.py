@@ -13,25 +13,26 @@ from teuthology.orchestra.remote import Remote
 log = logging.getLogger(__name__)
 
 
-class S3TestsGo(Task):
+class S3tests_go(Task):
     """
     Download and install S3TestsGo
     This will require golang
     """
 
     def __init__(self, ctx, config):
-        super(S3TestsGo, self).__init__(ctx, config)
+        super(S3tests_go, self).__init__(ctx, config)
         self.log = log
         log.info('S3 Tests Go: In __init__ step')
 
     def setup(self):
-        super(S3TestsGo, self).setup()
+        super(S3tests_go, self).setup()
         config = self.config
         log.info('S3 Tests Go: In setup step')
         log.debug('config is: %r', config)
+        self.download()
 
     def begin(self):
-        super(S3TestsGo, self).begin()
+        super(S3tests_go, self).begin()
         log.info('S3 Tests Go: In begin step')
         ctx = self.ctx
         log.debug('ctx is: %r', ctx)
@@ -39,9 +40,11 @@ class S3TestsGo(Task):
         remote.run(
             args=['echo', 'S3 Tests Go: console output test"'], stdout=StringIO())
         remote.run(args=['sleep', '15'], stdout=StringIO())
-
+        
     def teardown(self):
         log.info('S3 Tests Go: Teardown step')
+        self.remove_tests()
+        
 
     def install_packages(self):
         log.info("S3 Tests Go: Installing packages...")
@@ -61,9 +64,9 @@ class S3TestsGo(Task):
                     branch = cconf.get('branch', suite_branch)
                 else:
                     branch = cconf.get('branch', 'ceph-' + suite_branch)
-            if not branch:
-                raise ValueError(
-                    "S3 Tests Go: Could not determine what branch to use for s3tests!")
+            # if not branch:
+            #     raise ValueError(
+            #         "S3 Tests Go: Could not determine what branch to use for s3tests!")
             else:
                 log.info("S3 Tests Go: Using branch '%s' for s3tests", branch)
             sha1 = cconf.get('sha1')
@@ -73,11 +76,9 @@ class S3TestsGo(Task):
                     'git', 'clone',
                     '-b', 'master',
                     'git@github.com:adamyanova/go_s3tests.git'
-                    '{tdir}/s3-tests-go'.format(tdir=testdir),
+                    '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
                 )
-            
-        
 
     def remove_tests(self):
         log.info('"S3 Tests Go: Removing s3-tests...')
@@ -89,10 +90,8 @@ class S3TestsGo(Task):
                 args=[
                     'rm',
                     '-rf',
-                    '{tdir}/s3-tests-go'.format(tdir=testdir),
+                    '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
                 )
 
-
-
-task = s3tests_go
+task = S3tests_go
