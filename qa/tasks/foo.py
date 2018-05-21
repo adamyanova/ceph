@@ -8,6 +8,7 @@ from teuthology import misc
 from teuthology.exceptions import ConfigError
 from teuthology.task import Task
 from teuthology.orchestra import run
+from teuthology.orchestra import remote
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +47,8 @@ class Foo(Task):
         log.info('In begin step, hello world')
 	ctx = self.ctx
         log.debug('ctx is: %r', ctx)
+        Remote remote;
+        remote.run(iargs=['sleep', '15'], stdout=StringIO());
 
     def teardown(self):
         log.info('Teardown step, hello world')
