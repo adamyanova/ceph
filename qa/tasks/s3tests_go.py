@@ -43,7 +43,7 @@ class S3tests_go(Task):
         
     def teardown(self):
         log.info('S3 Tests Go: Teardown step')
-        self.remove_tests()
+        # self.remove_tests()
         
 
     def install_packages(self):
