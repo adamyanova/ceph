@@ -71,9 +71,9 @@ class S3TestsGo(Task):
             ctx.cluster.only(client).run(
                 args=[
                     'git', 'clone',
-                    '-b', branch,
-                    git_remote + 's3-tests.git',
-                    '{tdir}/s3-tests'.format(tdir=testdir),
+                    '-b', 'master',
+                    'git@github.com:adamyanova/go_s3tests.git'
+                    '{tdir}/s3-tests-go'.format(tdir=testdir),
                     ],
                 )
             
@@ -89,10 +89,10 @@ class S3TestsGo(Task):
                 args=[
                     'rm',
                     '-rf',
-                    '{tdir}/s3-tests'.format(tdir=testdir),
+                    '{tdir}/s3-tests-go'.format(tdir=testdir),
                     ],
                 )
 
 
 
-task = S3TestsGo
+task = s3tests_go
