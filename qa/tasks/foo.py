@@ -48,6 +48,7 @@ class Foo(Task):
 	ctx = self.ctx
         log.debug('ctx is: %r', ctx)
         remote = Remote('ubuntu@smithi166.front.sepia.ceph.com')
+        remote.run(args=['echo','"hello world: console output 15"'], stdout=StringIO())
         remote.run(args=['sleep', '15'], stdout=StringIO())
 
     def teardown(self):
