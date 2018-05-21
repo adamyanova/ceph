@@ -79,6 +79,12 @@ class S3tests_go(Task):
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
                 )
+            ctx.cluster.only(client).run(
+                args=[
+                    'ls'
+                    '{tdir}/s3-tests'.format(tdir=testdir)
+                    ], stdout=StringIO()
+                )
 
     def remove_tests(self):
         log.info('"S3 Tests Go: Removing s3-tests...')
