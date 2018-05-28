@@ -57,7 +57,7 @@ class S3tests_go(Task):
         s3_branches = ['wip-foo']
         for (client, cconf) in cluster.remotes.iteritems():
             ctx.cluster.run(
-                args=['echo', '"client is {clt}"'.format(clt = client)],
+                args=['echo', '"S3 Tests Go: Client is {clt}"'.format(clt = client)],
                 stdout=StringIO()
             )
             # branch = cconf.get('force-branch', None)
@@ -79,7 +79,7 @@ class S3tests_go(Task):
                 args=[
                     'git', 'clone',
                     '-b', 'master',
-                    'git@github.com:adamyanova/go_s3tests.git'
+                    'git://github.com/adamyanova/go_s3tests.git'
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
                 stdout=StringIO()
