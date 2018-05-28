@@ -86,15 +86,16 @@ class S3tests_go(Task):
     def remove_tests(self):
         log.info('"S3 Tests Go: Removing s3-tests...')
         ctx = self.ctx
+        cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        config = self.config
-        for client in config:
-            ctx.cluster.run(
+        for (client, cconf) in cluster.remotes.iteritems():
+            cluster.run(
                 args=[
                     'rm',
                     '-rf',
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
+                stdout=StringIO()
                 )
     def _config_user(s3tests_conf, section, user):
         """
