@@ -35,11 +35,7 @@ class S3tests_go(Task):
         super(S3tests_go, self).begin()
         log.info('S3 Tests Go: In begin step')
         ctx = self.ctx
-        log.debug('ctx is: %r', ctx)
-        remote = Remote('ubuntu@smithi085.front.sepia.ceph.com')
-        remote.run(
-            args=['echo', 'S3 Tests Go: console output test"'], stdout=StringIO())
-        remote.run(args=['sleep', '15'], stdout=StringIO())
+        log.debug('S3 Tests Go: ctx is: %r', ctx)
         
     def teardown(self):
         log.info('S3 Tests Go: Teardown step')
@@ -74,11 +70,11 @@ class S3tests_go(Task):
                 stdout=StringIO()
             )
             cluster.run(
-                args=['echo', '"$(ls {tdir}/s3-tests)"'.format(tdir=testdir)], 
+                args=['ls {tdir}/s3-tests'.format(tdir=testdir)], 
                 stdout=StringIO()
                 )
             cluster.run(
-                args=['{tdir}/s3-tests/bootsrap.sh'.format(tdir=testdir)],
+                args=['{tdir}/s3-tests/bootstrap.sh'.format(tdir=testdir)],
                 stdout=StringIO()
             )
 
