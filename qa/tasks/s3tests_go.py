@@ -75,7 +75,7 @@ class S3tests_go(Task):
             #     log.info("S3 Tests Go: Using branch '%s' for s3tests; not used yet!", branch)
             # sha1 = cconf.get('sha1')
             # git_remote = cconf.get('git_remote', None) or teuth_config.ceph_git_base_url
-            ctx.cluster.only(client).run(
+            ctx.cluster.run(
                 args=[
                     'git', 'clone',
                     '-b', 'master',
@@ -84,11 +84,11 @@ class S3tests_go(Task):
                     ],
                 stdout=StringIO()
                 )
-            ctx.cluster.only(client).run(
+            ctx.cluster.run(
                 args=['echo', '"{tdir}/s3-tests'.format(tdir=testdir)],
                 stdout=StringIO()
             )
-            ctx.cluster.only(client).run(
+            ctx.cluster.run(
                 args=[
                     'echo', '"$(ls {tdir}/s3-tests)"'.format(tdir=testdir),
                     ], 
@@ -101,7 +101,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         config = self.config
         for client in config:
-            ctx.cluster.only(client).run(
+            ctx.cluster.run(
                 args=[
                     'rm',
                     '-rf',
