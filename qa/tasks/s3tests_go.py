@@ -41,6 +41,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         for (client, cconf) in cluster.remotes.iteritems():
             log.info('S3 Tests Go: Client {clt} config is: {cfg}'.format(clt = client, cfg = cconf))
+            log.info('S3 Tests Go: Client config[\'client.0\'] is : {cfg}'.format(cfg = cconf['client.0']))
         self.create_users()
         
     def teardown(self):
@@ -132,7 +133,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         users = {'s3 main': 'foo', 's3 alt': 'bar'}
         for (client, cconf) in cluster.remotes.iteritems():
-            s3tests_conf = cconf['s3tests_conf'][client]
+            s3tests_conf = cconf['client.0'][client]
             s3tests_conf.setdefault('fixtures', {})
             s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + client + '-{random}-')
             log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
