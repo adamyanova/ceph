@@ -135,7 +135,7 @@ class S3tests_go(Task):
             s3tests_conf = cconf['s3tests_conf'][client]
             s3tests_conf.setdefault('fixtures', {})
             s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + client + '-{random}-')
-            log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf)
+            log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for (section, user) in users.iteritems():
                 _config_user(s3tests_conf, section, '{user}.{client}'.format(user=user, client=client))
                 log.debug('Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=client))
