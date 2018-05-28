@@ -37,6 +37,10 @@ class S3tests_go(Task):
         log.info('S3 Tests Go: In begin step')
         ctx = self.ctx
         log.debug('S3 Tests Go: ctx is: %r', ctx)
+        cluster = ctx.cluster
+        testdir = teuthology.get_testdir(ctx)
+        for (client, cconf) in cluster.remotes.iteritems():
+            log.info('S3 Tests Go: Client {clt} config is: {cfg}'.format(clt = client, cfg = cconf))
         
     def teardown(self):
         log.info('S3 Tests Go: Teardown step')
@@ -63,6 +67,10 @@ class S3tests_go(Task):
         for (client, cconf) in cluster.remotes.iteritems():
             cluster.run(
                 args=['echo', '"S3 Tests Go: Client is {clt}"'.format(clt = client)],
+                stdout=StringIO()
+            )
+            cluster.run(
+                args=['echo', '"S3 Tests Go: Cluster config is: {cfg}"'.format(cfg = cconf)],
                 stdout=StringIO()
             )
             cluster.run(
@@ -97,19 +105,34 @@ class S3tests_go(Task):
                     ],
                 stdout=StringIO()
                 )
-    def _config_user(s3tests_conf, section, user):
-        """
-        Configure users for this section by stashing away keys, ids, and
-        email addresses.
-        """
-        s3tests_conf[section].setdefault('user_id', user)
-        s3tests_conf[section].setdefault('email', '{user}+test@test.test'.format(user=user))
-        s3tests_conf[section].setdefault('display_name', 'Mr. {user}'.format(user=user))
-        s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.uppercase) for i in xrange(20)))
-        s3tests_conf[section].setdefault('secret_key', base64.b64encode(os.urandom(40)))
-        s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in xrange(10)))
-        s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
-        s3tests_conf[section].setdefault('totp_seconds', '5')
+                
+    # def _config_user(s3tests_conf, section, user):
+    #     """
+    #     Configure users for this section by stashing away keys, ids, and
+    #     email addresses.
+    #     """
+    #     s3tests_conf[section].setdefault('user_id', user)
+    #     s3tests_conf[section].setdefault('email', '{user}+test@test.test'.format(user=user))
+    #     s3tests_conf[section].setdefault('display_name', 'Mr. {user}'.format(user=user))
+    #     s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.uppercase) for i in xrange(20)))
+    #     s3tests_conf[section].setdefault('secret_key', base64.b64encode(os.urandom(40)))
+    #     s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in xrange(10)))
+    #     s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
+    #     s3tests_conf[section].setdefault('totp_seconds', '5')
+
+    # def create_users(self):
+    #     """
+    #     Create a main and an alternate s3 user.
+    #     """
+    #     log.info("S3 Tests Go: Creating users...")
+    #     ctx = self.ctx
+    #     cluster = ctx.cluster
+    #     testdir = teuthology.get_testdir(ctx)
+    #     users = {'s3 main': 'foo', 's3 alt': 'bar'}
+    #     for (client, cconf) in cluster.remotes.iteritems():
+    #         s3tests_conf = cconf['s3tests_conf'][client]
+    #         s3tests_conf.setdefault('fixtures', {})
+    #         s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + client + '-{random}-')
 
 
 task = S3tests_go
