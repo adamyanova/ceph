@@ -2,6 +2,8 @@
 
 set -e
 
+echo "S3 Tests running .bootstrap.sh " 1>&2
+
 if [ -f /etc/debian_version ]; then
     for package in golang; do
         if [ "$(dpkg --status -- $package 2>/dev/null|sed -n 's/^Status: //p')" != "install ok installed" ]; then
@@ -34,4 +36,6 @@ elif [ -f /etc/redhat-release ]; then
         sudo yum -y install $missing
     fi
 fi
+
+echo "S3 Tests END of running .bootstrap " 1>&2
 

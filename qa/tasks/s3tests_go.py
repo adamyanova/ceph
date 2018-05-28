@@ -43,7 +43,7 @@ class S3tests_go(Task):
         
     def teardown(self):
         log.info('S3 Tests Go: Teardown step')
-        # self.remove_tests()
+        self.remove_tests()
         
 
     def install_packages(self):
@@ -56,44 +56,31 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         s3_branches = ['wip-foo']
         for (client, cconf) in cluster.remotes.iteritems():
-            ctx.cluster.run(
+            cluster.run(
                 args=['echo', '"S3 Tests Go: Client is {clt}"'.format(clt = client)],
                 stdout=StringIO()
             )
-            # branch = cconf.get('force-branch', None)
-            # if not branch:
-            #     ceph_branch = ctx.config.get('branch')
-            #     suite_branch = ctx.config.get('suite_branch')
-            #     if suite_branch in s3_branches:
-            #         branch = cconf.get('branch', suite_branch)
-            #     else:
-            #         branch = cconf.get('branch', 'ceph-' + suite_branch)
-            # if not branch:
-            #     raise ValueError(
-            #         "S3 Tests Go: Could not determine what branch to use for s3tests!")
-            # else:
-            #     log.info("S3 Tests Go: Using branch '%s' for s3tests; not used yet!", branch)
-            # sha1 = cconf.get('sha1')
-            # git_remote = cconf.get('git_remote', None) or teuth_config.ceph_git_base_url
-            ctx.cluster.run(
+            cluster.run(
                 args=[
                     'git', 'clone',
                     '-b', 'master',
-                    'git://github.com/adamyanova/go_s3tests.git'
+                    'https://github.com/adamyanova/go_s3tests.git',
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
                 stdout=StringIO()
                 )
-            ctx.cluster.run(
-                args=['echo', '"{tdir}/s3-tests'.format(tdir=testdir)],
+            cluster.run(
+                args=['echo', '"{tdir}/s3-tests"'.format(tdir=testdir)],
                 stdout=StringIO()
             )
-            ctx.cluster.run(
-                args=[
-                    'echo', '"$(ls {tdir}/s3-tests)"'.format(tdir=testdir),
-                    ], 
+            cluster.run(
+                args=['echo', '"$(ls {tdir}/s3-tests)"'.format(tdir=testdir)], 
                 stdout=StringIO()
                 )
+            cluster.run(
+                args=['{tdir}/s3-tests/bootsrap.sh'.format(tdir=testdir)],
+                stdout=StringIO()
+            )
 
     def remove_tests(self):
         log.info('"S3 Tests Go: Removing s3-tests...')
