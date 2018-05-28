@@ -79,7 +79,7 @@ class S3tests_go(Task):
                 args=[
                     'git', 'clone',
                     '-b', 'master',
-                    'git://github.com/adamyanova/go_s3tests.git'
+                    'git://github.com/adamyanova/go_s3tests.git',
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
                 stdout=StringIO()
