@@ -30,6 +30,7 @@ class S3tests_go(Task):
         log.info('S3 Tests Go: In setup step')
         log.debug('config is: %r', config)
         self.download()
+        self.install_packages()
 
     def begin(self):
         super(S3tests_go, self).begin()
@@ -43,7 +44,15 @@ class S3tests_go(Task):
         
 
     def install_packages(self):
-        log.info("S3 Tests Go: Installing packages...")
+        log.info("S3 Tests Go: Installing required packages...")
+        ctx = self.ctx
+        cluster = ctx.cluster
+        testdir = teuthology.get_testdir(ctx)
+        for (client, cconf) in cluster.remotes.iteritems():
+            cluster.run(
+                args=['{tdir}/s3-tests/bootstrap.sh'.format(tdir=testdir)],
+                stdout=StringIO()
+            )
 
     def download(self):
         log.info("S3 Tests Go: Downloading test suite...")
@@ -66,17 +75,13 @@ class S3tests_go(Task):
                 stdout=StringIO()
                 )
             cluster.run(
-                args=['echo', '"{tdir}/s3-tests"'.format(tdir=testdir)],
+                args=['echo', '{tdir}/s3-tests'.format(tdir=testdir)],
                 stdout=StringIO()
             )
             cluster.run(
-                args=['ls {tdir}/s3-tests'.format(tdir=testdir)], 
+                args=['ls','{tdir}/s3-tests'.format(tdir=testdir)], 
                 stdout=StringIO()
                 )
-            cluster.run(
-                args=['{tdir}/s3-tests/bootstrap.sh'.format(tdir=testdir)],
-                stdout=StringIO()
-            )
 
     def remove_tests(self):
         log.info('"S3 Tests Go: Removing s3-tests...')
@@ -91,5 +96,19 @@ class S3tests_go(Task):
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     ],
                 )
+    def _config_user(s3tests_conf, section, user):
+        """
+        Configure users for this section by stashing away keys, ids, and
+        email addresses.
+        """
+        s3tests_conf[section].setdefault('user_id', user)
+        s3tests_conf[section].setdefault('email', '{user}+test@test.test'.format(user=user))
+        s3tests_conf[section].setdefault('display_name', 'Mr. {user}'.format(user=user))
+        s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.uppercase) for i in xrange(20)))
+        s3tests_conf[section].setdefault('secret_key', base64.b64encode(os.urandom(40)))
+        s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in xrange(10)))
+        s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
+        s3tests_conf[section].setdefault('totp_seconds', '5')
+
 
 task = S3tests_go
