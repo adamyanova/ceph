@@ -44,6 +44,7 @@ class S3tests_go(Task):
         for (client, cconf) in cluster.remotes.iteritems():
             log.info('S3 Tests Go: Client {clt} config is: {cfg}'.format(clt = client, cfg = cconf))
         self.create_users()
+        self.run_tests()
         
     def teardown(self):
         log.info('S3 Tests Go: Teardown step')
