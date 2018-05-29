@@ -184,7 +184,7 @@ class S3tests_go(Task):
         log.info("S3 Tests Go: Deleting users...")
         ctx = self.ctx
         cluster = ctx.cluster
-        users = {'s3 main': 'foo', 's3 alt': 'bar'}
+        testdir = teuthology.get_testdir(ctx)
         for (client, cconf) in cluster.remotes.iteritems():
             # cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
             # client_with_id = daemon_type + '.' + client_id
