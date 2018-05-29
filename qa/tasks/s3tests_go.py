@@ -142,8 +142,8 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         cluster.run(
                 args=['cp', 
-                    '{tdir}/s3-tests/config.toml.sample',
-                    '{tdir}/s3-tests/config.toml'
+                    '{tdir}/s3-tests/config.toml.sample'.format(tdir=testdir),
+                    '{tdir}/s3-tests/config.toml'.format(tdir=testdir)
                 ],
                 stdout=StringIO()
             )
