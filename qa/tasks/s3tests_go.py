@@ -161,7 +161,7 @@ class S3tests_go(Task):
             # cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
 
             # client_with_id = daemon_type + '.' + client_id
-            client_with_id = client.0
+            client_with_id = 'client.0'
             ctx.cluster.run(
                 args=[
                     'adjust-ulimits',
@@ -189,7 +189,7 @@ class S3tests_go(Task):
         for (client, cconf) in cluster.remotes.iteritems():
             # cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
             # client_with_id = daemon_type + '.' + client_id
-            client_with_id = client.0
+            client_with_id = 'client.0'
             ctx.cluster.run(
                 args=[
                     'adjust-ulimits',
