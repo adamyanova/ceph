@@ -101,7 +101,7 @@ class S3tests_go(Task):
         cluster = ctx.cluster
         for (client, cconf) in cluster.remotes.iteritems():
             cluster.run(
-                args=['mkdir', '~/go'],
+                args=['mkdir', '{tdir}/../go'.format(tdir=testdir)],
                 stdout=StringIO()
                 )
             cluster.run(
@@ -140,7 +140,7 @@ class S3tests_go(Task):
                     'rm',
                     '-rf',
                     '{tdir}/s3-tests'.format(tdir=testdir),
-                    '~/go'
+                    '{tdir}/../go'.format(tdir=testdir)
                     ],
                 stdout=StringIO()
                 )
