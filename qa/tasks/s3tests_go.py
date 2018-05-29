@@ -158,7 +158,7 @@ class S3tests_go(Task):
             #             '--cluster', cluster_name,
             #         ],
             #     )
-            cluster_name, daemon_type, client_id = teuthology.split_role(client)
+            cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
             client_with_id = daemon_type + '.' + client_id
             ctx.cluster.run(
                 args=[
@@ -185,7 +185,7 @@ class S3tests_go(Task):
         cluster = ctx.cluster
         users = {'s3 main': 'foo', 's3 alt': 'bar'}
         for (client, cconf) in cluster.remotes.iteritems():
-            cluster_name, daemon_type, client_id = teuthology.split_role(client)
+            cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
             client_with_id = daemon_type + '.' + client_id
             ctx.cluster.run(
                 args=[
