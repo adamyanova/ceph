@@ -106,7 +106,7 @@ class S3tests_go(Task):
                 stdout=StringIO()
                 )
             cluster.run(
-                args=['export', 'GOPATH=$HOME/go'],
+                args=['export', 'GOPATH=/home/ubuntu/go'],
                 stdout=StringIO()
             )
             cluster.run(
