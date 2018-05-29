@@ -46,8 +46,8 @@ class S3tests_go(Task):
         
     def teardown(self):
         log.info('S3 Tests Go: Teardown step')
-        self.remove_tests()
         self.delete_users()
+        self.remove_tests()
         
 
     def install_packages(self):
@@ -179,7 +179,6 @@ class S3tests_go(Task):
                 ],
                 stdout=StringIO()
             )
-        
 
     def delete_users(self):
         log.info("S3 Tests Go: Deleting users...")
@@ -204,6 +203,5 @@ class S3tests_go(Task):
                     ],
                     stdout=StringIO()
                 )
-
 
 task = S3tests_go
