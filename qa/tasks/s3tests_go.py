@@ -41,7 +41,6 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         for (client, cconf) in cluster.remotes.iteritems():
             log.info('S3 Tests Go: Client {clt} config is: {cfg}'.format(clt = client, cfg = cconf))
-            # log.info('S3 Tests Go: Client config[0] is : {cfg}'.format(cfg = cconf[0]))          
         self.create_users()
         
     def teardown(self):
@@ -94,6 +93,40 @@ class S3tests_go(Task):
                 stdout=StringIO()
                 )
 
+    def setup_go(self):
+        log.info("S3 Tests Go: Setting up Go...")
+        ctx = self.ctx
+        cluster = ctx.cluster
+        for (client, cconf) in cluster.remotes.iteritems():
+            cluster.run(
+                args=['mkdir', '~/go'],
+                stdout=StringIO()
+                )
+            cluster.run(
+                args=['export', 'GOPATH=$HOME/go'],
+                stdout=StringIO()
+            )
+            cluster.run(
+                args=['echo', '$GOPATH'],
+                stdout=StringIO()
+            )
+
+    def install_tests_dependencies(self):
+        log.info("S3 Tests Go: Installing tests dependencies...")
+        ctx = self.ctx
+        cluster = ctx.cluster
+        testdir = teuthology.get_testdir(ctx)
+        cluster.run(
+                args=['cd', 
+                    '{tdir}/s3-tests;'.format(tdir=testdir),
+                    'go',
+                    'get',
+                    '-d',
+                    './...'
+                    ],
+                stdout=StringIO()
+            )
+
     def remove_tests(self):
         log.info('"S3 Tests Go: Removing s3-tests...')
         ctx = self.ctx
@@ -105,6 +138,7 @@ class S3tests_go(Task):
                     'rm',
                     '-rf',
                     '{tdir}/s3-tests'.format(tdir=testdir),
+                    '~/go'
                     ],
                 stdout=StringIO()
                 )
