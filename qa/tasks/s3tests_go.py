@@ -99,6 +99,7 @@ class S3tests_go(Task):
         log.info("S3 Tests Go: Setting up Go...")
         ctx = self.ctx
         cluster = ctx.cluster
+        testdir = teuthology.get_testdir(ctx)
         for (client, cconf) in cluster.remotes.iteritems():
             cluster.run(
                 args=['mkdir', '{tdir}/../go'.format(tdir=testdir)],
