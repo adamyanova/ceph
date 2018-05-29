@@ -133,31 +133,51 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         users = {'s3 main': 'foo', 's3 alt': 'bar'}
         for (client, cconf) in cluster.remotes.iteritems():
-            s3tests_conf = teuthology.config_file()
-            s3tests_conf.setdefault('fixtures', {})
-            s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + client + '-{random}-')
-            log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
-            for (section, user) in users.iteritems():
-                _config_user(s3tests_conf, section, '{user}.{client}'.format(user=user, client=client))
-                log.debug('Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=client))
-                cluster_name, daemon_type, client_id = teuthology.split_role(client)
-                client_with_id = daemon_type + '.' + client_id
-                ctx.cluster.run(
-                    args=[
-                        'adjust-ulimits',
-                        'ceph-coverage',
-                        '{tdir}/archive/coverage'.format(tdir=testdir),
-                        'radosgw-admin',
-                        '-n', client_with_id,
-                        'user', 'create',
-                        '--uid', s3tests_conf[section]['user_id'],
-                        '--display-name', s3tests_conf[section]['display_name'],
-                        '--access-key', s3tests_conf[section]['access_key'],
-                        '--secret', s3tests_conf[section]['secret_key'],
-                        '--email', s3tests_conf[section]['email'],
-                        '--cluster', cluster_name,
-                    ],
-                )
+            # s3tests_conf = teuthology.config_file()
+            # s3tests_conf.setdefault('fixtures', {})
+            # s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + client + '-{random}-')
+            # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
+            # for (section, user) in users.iteritems():
+            #     _config_user(s3tests_conf, section, '{user}.{client}'.format(user=user, client=client))
+            #     log.debug('Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=client))
+            #     cluster_name, daemon_type, client_id = teuthology.split_role(client)
+            #     client_with_id = daemon_type + '.' + client_id
+            #     ctx.cluster.run(
+            #         args=[
+            #             'adjust-ulimits',
+            #             'ceph-coverage',
+            #             '{tdir}/archive/coverage'.format(tdir=testdir),
+            #             'radosgw-admin',
+            #             '-n', client_with_id,
+            #             'user', 'create',
+            #             '--uid', s3tests_conf[section]['user_id'],
+            #             '--display-name', s3tests_conf[section]['display_name'],
+            #             '--access-key', s3tests_conf[section]['access_key'],
+            #             '--secret', s3tests_conf[section]['secret_key'],
+            #             '--email', s3tests_conf[section]['email'],
+            #             '--cluster', cluster_name,
+            #         ],
+            #     )
+            cluster_name, daemon_type, client_id = teuthology.split_role(client)
+            client_with_id = daemon_type + '.' + client_id
+            ctx.cluster.run(
+                args=[
+                    'adjust-ulimits',
+                    'ceph-coverage',
+                    '{tdir}/archive/coverage'.format(tdir=testdir),
+                    'radosgw-admin',
+                    '-n', client_with_id,
+                    'user', 'create',
+                    '--uid', 'testid',
+                    '--display-name', 'M. Tester',
+                    '--access-key', '0555b35654ad1656d804',
+                    '--secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==',
+                    '--email', 'tester@ceph.com',
+                    '--cluster', cluster_name,
+                ],
+                stdout=StringIO()
+            )
+        
 
     def delete_users(self):
         log.info("S3 Tests Go: Deleting users...")
@@ -165,23 +185,22 @@ class S3tests_go(Task):
         cluster = ctx.cluster
         users = {'s3 main': 'foo', 's3 alt': 'bar'}
         for (client, cconf) in cluster.remotes.iteritems():
-            for user in users.itervalues():
-                uid = '{user}.{client}'.format(user=user, client=client)
-                cluster_name, daemon_type, client_id = teuthology.split_role(client)
-                client_with_id = daemon_type + '.' + client_id
-                ctx.cluster.run(
-                    args=[
-                        'adjust-ulimits',
-                        'ceph-coverage',
-                        '{tdir}/archive/coverage'.format(tdir=testdir),
-                        'radosgw-admin',
-                        '-n', client_with_id,
-                        'user', 'rm',
-                        '--uid', uid,
-                        '--purge-data',
-                        '--cluster', cluster_name,
-                        ],
-                    )
+            cluster_name, daemon_type, client_id = teuthology.split_role(client)
+            client_with_id = daemon_type + '.' + client_id
+            ctx.cluster.run(
+                args=[
+                    'adjust-ulimits',
+                    'ceph-coverage',
+                    '{tdir}/archive/coverage'.format(tdir=testdir),
+                    'radosgw-admin',
+                    '-n', client_with_id,
+                    'user', 'rm',
+                    '--uid', 'testid',
+                    '--purge-data',
+                    '--cluster', cluster_name,
+                    ],
+                    stdout=StringIO()
+                )
 
 
 task = S3tests_go
