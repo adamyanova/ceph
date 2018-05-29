@@ -175,7 +175,7 @@ class S3tests_go(Task):
                     '--access-key', '0555b35654ad1656d804',
                     '--secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==',
                     '--email', 'tester@ceph.com',
-                    '--cluster', cluster_name,
+                    '--cluster', 'ceph',
                 ],
                 stdout=StringIO()
             )
@@ -200,7 +200,7 @@ class S3tests_go(Task):
                     'user', 'rm',
                     '--uid', 'testid',
                     '--purge-data',
-                    '--cluster', cluster_name,
+                    '--cluster', 'ceph',
                     ],
                     stdout=StringIO()
                 )
