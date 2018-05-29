@@ -158,8 +158,10 @@ class S3tests_go(Task):
             #             '--cluster', cluster_name,
             #         ],
             #     )
-            cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
-            client_with_id = daemon_type + '.' + client_id
+            # cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
+
+            # client_with_id = daemon_type + '.' + client_id
+            client_with_id = client.0
             ctx.cluster.run(
                 args=[
                     'adjust-ulimits',
@@ -185,8 +187,9 @@ class S3tests_go(Task):
         cluster = ctx.cluster
         users = {'s3 main': 'foo', 's3 alt': 'bar'}
         for (client, cconf) in cluster.remotes.iteritems():
-            cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
-            client_with_id = daemon_type + '.' + client_id
+            # cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
+            # client_with_id = daemon_type + '.' + client_id
+            client_with_id = client.0
             ctx.cluster.run(
                 args=[
                     'adjust-ulimits',
