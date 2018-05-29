@@ -129,6 +129,33 @@ class S3tests_go(Task):
                 args=['go', 'get', '-d', './...'],
                 stdout=StringIO()
             )
+        cluster.run(
+                args=['ls', '/home/ubuntu/go/src/github.com/'],
+                stdout=StringIO()
+            )
+
+    def run_tests(self):
+        log.info("S3 Tests Go: Running tests...")
+        ctx = self.ctx
+        cluster = ctx.cluster
+        testdir = teuthology.get_testdir(ctx)
+        cluster.run(
+                args=['cp', 
+                    '{tdir}/s3-tests/config.toml.sample',
+                    '{tdir}/s3-tests/config.toml'
+                ],
+                stdout=StringIO()
+            )
+        cluster.run(
+                args=['cd', 
+                    '{tdir}/s3-tests/s3tests'.format(tdir=testdir)
+                    ],
+                stdout=StringIO()
+            )
+        cluster.run(
+                args=['go', 'test', '-v'],
+                stdout=StringIO()
+            )
 
     def remove_tests(self):
         log.info('"S3 Tests Go: Removing s3-tests...')
