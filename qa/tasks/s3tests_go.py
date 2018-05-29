@@ -133,7 +133,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         users = {'s3 main': 'foo', 's3 alt': 'bar'}
         for (client, cconf) in cluster.remotes.iteritems():
-            s3tests_conf = config_file("test_cfg.yaml")
+            s3tests_conf = teuthology.config_file("test_cfg.yaml")
             s3tests_conf.setdefault('fixtures', {})
             s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + client + '-{random}-')
             log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
