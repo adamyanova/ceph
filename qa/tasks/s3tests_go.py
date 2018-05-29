@@ -121,12 +121,12 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         cluster.run(
                 args=['cd', 
-                    '{tdir}/s3-tests;'.format(tdir=testdir),
-                    'go',
-                    'get',
-                    '-d',
-                    './...'
+                    '{tdir}/s3-tests'.format(tdir=testdir)
                     ],
+                stdout=StringIO()
+            )
+        cluster.run(
+                args=['go', 'get', '-d', './...'],
                 stdout=StringIO()
             )
 
