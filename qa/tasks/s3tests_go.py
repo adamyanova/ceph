@@ -31,6 +31,8 @@ class S3tests_go(Task):
         log.debug('config is: %r', config)
         self.download()
         self.install_packages()
+        self.setup_go()
+        self.install_tests_dependencies()
 
     def begin(self):
         super(S3tests_go, self).begin()
