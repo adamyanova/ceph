@@ -123,9 +123,10 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         cluster.run(
                 args=['cd', 
-                    '{tdir}/s3-tests'.format(tdir=testdir)
+                    '{tdir}/s3-tests'.format(tdir=testdir),
                     run.Raw(';'),
-                    'go', 'get', '-d', './...'],
+                    'go', 'get', '-d', './...'
+                    ],
                 stdout=StringIO()
             )
         cluster.run(
@@ -147,12 +148,9 @@ class S3tests_go(Task):
             )
         cluster.run(
                 args=['cd', 
-                    '{tdir}/s3-tests/s3tests'.format(tdir=testdir)
-                    ],
-                stdout=StringIO()
-            )
-        cluster.run(
-                args=['go', 'test', '-v'],
+                    '{tdir}/s3-tests/s3tests'.format(tdir=testdir),
+                    run.Raw(';'),
+                    'go', 'test', '-v'],
                 stdout=StringIO()
             )
 
