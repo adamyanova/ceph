@@ -47,6 +47,7 @@ class S3tests_go(Task):
         self.run_tests()
         
     def teardown(self):
+        super(S3tests_go, self).teardown()
         log.info('S3 Tests Go: Teardown step')
         self.delete_users()
         self.remove_tests()
@@ -106,12 +107,12 @@ class S3tests_go(Task):
                 args=['mkdir', '{tdir}/../go'.format(tdir=testdir)],
                 stdout=StringIO()
                 )
+            # cluster.run(
+            #     args=[run.Raw('export GOPATH=/home/ubuntu/go')],
+            #     stdout=StringIO()
+            # )
             cluster.run(
-                args=[run.Raw('export GOPATH=/home/ubuntu/go')],
-                stdout=StringIO()
-            )
-            cluster.run(
-                args=['echo', run.Raw('$GOPATH')],
+                args=[run.Raw('echo $GOPATH')],
                 stdout=StringIO()
             )
 
