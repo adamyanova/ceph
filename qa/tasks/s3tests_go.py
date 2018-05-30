@@ -126,6 +126,8 @@ class S3tests_go(Task):
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     run.Raw(';'),
                     'go', 'get', '-d', './...'
+                    run.Raw(';'),
+                    'go', 'get', 'github.com/stretchr/testify'
                     ],
                 stdout=StringIO()
             )
