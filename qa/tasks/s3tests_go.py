@@ -112,7 +112,7 @@ class S3tests_go(Task):
                 stdout=StringIO()
             )
             cluster.run(
-                args=[run.Raw('echo $GOPATH')],
+                args=['echo',  run.Raw('$GOPATH')],
                 stdout=StringIO()
             )
 
@@ -124,11 +124,8 @@ class S3tests_go(Task):
         cluster.run(
                 args=['cd', 
                     '{tdir}/s3-tests'.format(tdir=testdir)
-                    ],
-                stdout=StringIO()
-            )
-        cluster.run(
-                args=['go', 'get', '-d', './...'],
+                    run.Raw(';'),
+                    'go', 'get', '-d', './...'],
                 stdout=StringIO()
             )
         cluster.run(
