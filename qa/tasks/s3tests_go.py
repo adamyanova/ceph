@@ -112,7 +112,7 @@ class S3tests_go(Task):
                 stdout=StringIO()
             )
             cluster.run(
-                args=['echo',  run.Raw('$GOPATH')],
+                args=['echo',  run.Raw('$'), 'GOPATH')],
                 stdout=StringIO()
             )
 
@@ -121,13 +121,14 @@ class S3tests_go(Task):
         ctx = self.ctx
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
+        # explicit download of stretchr/testify is required
         cluster.run(
                 args=['cd', 
                     '{tdir}/s3-tests'.format(tdir=testdir),
                     run.Raw(';'),
-                    'go', 'get', '-d', './...'
+                    'go', 'get', '-d', './...',
                     run.Raw(';'),
-                    'go', 'get', 'github.com/stretchr/testify'
+                    'go', 'get', 'github.com/stretchr/testify',
                     ],
                 stdout=StringIO()
             )
