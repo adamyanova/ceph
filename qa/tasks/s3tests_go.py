@@ -112,7 +112,7 @@ class S3tests_go(Task):
             #     stdout=StringIO()
             # )
             cluster.run(
-                args=[run.Raw('echo $GOPATH')],
+                args=[run.Raw("echo $GOPATH")],
                 stdout=StringIO()
             )
 
