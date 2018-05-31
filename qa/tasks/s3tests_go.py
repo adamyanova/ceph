@@ -23,6 +23,7 @@ class S3tests_go(Task):
         super(S3tests_go, self).__init__(ctx, config)
         self.log = log
         log.info('S3 Tests Go: In __init__ step')
+        assert hasattr(ctx, 'rgw'), 'S3tests_go must run after the rgw task'
 
     def setup(self):
         super(S3tests_go, self).setup()
@@ -41,8 +42,8 @@ class S3tests_go(Task):
         log.debug('S3 Tests Go: ctx is: %r', ctx)
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        for (client, cconf) in cluster.remotes.iteritems():
-            log.info('S3 Tests Go: Client {clt} config is: {cfg}'.format(clt = client, cfg = cconf))
+        for (host, roles) in cluster.remotes.iteritems():
+            log.info('S3 Tests Go: Client {clt} config is: {cfg}'.format(clt = host, cfg = roles))
         self.create_users()
         self.run_tests()
         
@@ -58,7 +59,7 @@ class S3tests_go(Task):
         ctx = self.ctx
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        for (client, cconf) in cluster.remotes.iteritems():
+        for (host, roles) in cluster.remotes.iteritems():
             cluster.run(
                 args=['{tdir}/s3-tests/bootstrap.sh'.format(tdir=testdir)],
                 stdout=StringIO()
@@ -70,13 +71,13 @@ class S3tests_go(Task):
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
         s3_branches = ['wip-foo']
-        for (client, cconf) in cluster.remotes.iteritems():
+        for (host, roles) in cluster.remotes.iteritems():
             cluster.run(
-                args=['echo', '"S3 Tests Go: Client is {clt}"'.format(clt = client)],
+                args=['echo', '"S3 Tests Go: Client is {clt}"'.format(clt = host)],
                 stdout=StringIO()
             )
             cluster.run(
-                args=['echo', '"S3 Tests Go: Cluster config is: {cfg}"'.format(cfg = cconf)],
+                args=['echo', '"S3 Tests Go: Cluster config is: {cfg}"'.format(cfg = roles)],
                 stdout=StringIO()
             )
             cluster.run(
@@ -102,7 +103,7 @@ class S3tests_go(Task):
         ctx = self.ctx
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        for (client, cconf) in cluster.remotes.iteritems():
+        for (host, roles) in cluster.remotes.iteritems():
             cluster.run(
                 args=['mkdir', '{tdir}/../go'.format(tdir=testdir)],
                 stdout=StringIO()
@@ -162,7 +163,7 @@ class S3tests_go(Task):
         ctx = self.ctx
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        for (client, cconf) in cluster.remotes.iteritems():
+        for (host, roles) in cluster.remotes.iteritems():
             cluster.run(
                 args=[
                     'rm',
@@ -196,15 +197,15 @@ class S3tests_go(Task):
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
         users = {'s3 main': 'foo', 's3 alt': 'bar'}
-        for (client, cconf) in cluster.remotes.iteritems():
+        for (host, roles) in cluster.remotes.iteritems():
             # s3tests_conf = teuthology.config_file()
             # s3tests_conf.setdefault('fixtures', {})
-            # s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + client + '-{random}-')
+            # s3tests_conf['fixtures'].setdefault('bucket prefix', 'test-' + host + '-{random}-')
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             # for (section, user) in users.iteritems():
-            #     _config_user(s3tests_conf, section, '{user}.{client}'.format(user=user, client=client))
-            #     log.debug('Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=client))
-            #     cluster_name, daemon_type, client_id = teuthology.split_role(client)
+            #     _config_user(s3tests_conf, section, '{user}.{host}'.format(user=user, host=host))
+            #     log.debug('Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=host))
+            #     cluster_name, daemon_type, client_id = teuthology.split_role(host)
             #     client_with_id = daemon_type + '.' + client_id
             #     ctx.cluster.run(
             #         args=[
@@ -222,7 +223,7 @@ class S3tests_go(Task):
             #             '--cluster', cluster_name,
             #         ],
             #     )
-            # cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
+            # cluster_name, daemon_type, client_id = teuthology.split_role roles)
 
             # client_with_id = daemon_type + '.' + client_id
             client_with_id = 'client.0'
@@ -243,14 +244,31 @@ class S3tests_go(Task):
                 ],
                 stdout=StringIO()
             )
+            ctx.cluster.run(
+                args=[
+                    'adjust-ulimits',
+                    'ceph-coverage',
+                    '{tdir}/archive/coverage'.format(tdir=testdir),
+                    'radosgw-admin',
+                    '-n', client_with_id,
+                    'user', 'create',
+                    '--uid', 'johndoe',
+                    '--display-name', 'John Doe',
+                    '--access-key', '0555b35654ad1656d804',
+                    '--secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==',
+                    '--email', 'johndoe@gmail.com',
+                    '--cluster', 'ceph',
+                ],
+                stdout=StringIO()
+            )
 
     def delete_users(self):
         log.info("S3 Tests Go: Deleting users...")
         ctx = self.ctx
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        for (client, cconf) in cluster.remotes.iteritems():
-            # cluster_name, daemon_type, client_id = teuthology.split_role(cconf)
+        for (host, roles) in cluster.remotes.iteritems():
+            # cluster_name, daemon_type, client_id = teuthology.split_role roles)
             # client_with_id = daemon_type + '.' + client_id
             client_with_id = 'client.0'
             ctx.cluster.run(
@@ -267,5 +285,16 @@ class S3tests_go(Task):
                     ],
                     stdout=StringIO()
                 )
+
+    def generate_config_file(self):
+        log.info("S3 Tests Go: Generate config file")
+        all_clients = ['client.{id}'.format(id=id_)
+                        for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
+        clients = all_clients.keys()
+        roles = teuthology.all_roles(self.ctx.cluster)
+        log.info("S3 Tests Go: roles {roles}".format(roles=roles))
+
+
+
 
 task = S3tests_go
