@@ -292,7 +292,7 @@ class S3tests_go(Task):
         clients = 'client.0'
         s3tests_conf = {}
         for client in clients:
-            endpoint = ctx.rgw.role_endpoints.get(client)
+            endpoint = self.ctx.rgw.role_endpoints.get(client)
             assert endpoint, 'S3 Tests Go: no rgw endpoint for {}'.format(client)
 
             s3tests_conf[client] = ConfigObj(
@@ -300,7 +300,7 @@ class S3tests_go(Task):
                 infile={
                     'DEFAULT':
                         {
-                        'host'      : endpoint.host,
+                        'host'      : endpoint.hostname,
                         'port'      : endpoint.port,
                         'is_secure' : 'yes' if endpoint.cert else 'no',
                         },
