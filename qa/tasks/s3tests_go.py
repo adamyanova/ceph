@@ -2,6 +2,7 @@
 Task for running RGW S3 tests with the AWS Go SDK
 """
 from cStringIO import StringIO
+from configobj import ConfigObj
 import logging
 
 from teuthology import misc as teuthology
