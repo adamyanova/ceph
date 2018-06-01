@@ -206,15 +206,15 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         all_clients = ['client.{id}'.format(id=id_)
                 for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        users = {'s3-main': 'tester', 's3-alt': 'johndoe'}
+        users = {'s3-main': 'tester', 's3-alt': 'johndoe', 's3-tenant' : 'tenanteduser'}
         s3tests_conf = self.s3tests_skelethon_config()
         for client in all_clients:
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for section, user in users.items():
                 log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
-                self._config_user(s3tests_conf=s3tests_conf, section='{sect}'.format(sect=section), user='{user}.{client}'.format(user=user, client=client))
-                log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=s3tests_conf[section]['user_id'], host=client))
-                log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
+                self._config_user(s3tests_conf=s3tests_conf[client], section=section, user='{user}.{client}'.format(user=user, client=client))
+                log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=s3tests_conf[client][section]['user_id'], host=client))
+                log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg=s3tests_conf))
                 cluster_name, daemon_type, client_id = teuthology.split_role(client)
                 client_with_id = daemon_type + '.' + client_id
                 ctx.cluster.run(
@@ -225,11 +225,11 @@ class S3tests_go(Task):
                         'radosgw-admin',
                         '-n', client_with_id,
                         'user', 'create',
-                        '--uid', s3tests_conf[section]['user_id'],
-                        '--display-name', s3tests_conf[section]['display_name'],
-                        '--access-key', s3tests_conf[section]['access_key'],
-                        '--secret', s3tests_conf[section]['secret_key'],
-                        '--email', s3tests_conf[section]['email'],
+                        '--uid', s3tests_conf[client][section]['user_id'],
+                        '--display-name', s3tests_conf[client][section]['display_name'],
+                        '--access-key', s3tests_conf[client][section]['access_key'],
+                        '--secret', s3tests_conf[client][section]['secret_key'],
+                        '--email', s3tests_conf[client][section]['email'],
                         '--cluster', cluster_name,
                     ],
                     stdout=StringIO()
@@ -304,7 +304,7 @@ class S3tests_go(Task):
         # clients = {'client.0'}
         s3tests_conf = {}
         for client in all_clients:
-            log.info("S3 Tests Go: config for client {clt}".format(clt=client))
+            log.info("S3 Tests Go: Config for client {clt}".format(clt=client))
             endpoint = self.ctx.rgw.role_endpoints.get('client.0')
             # assert endpoint, 'S3 Tests Go: no rgw endpoint for {}'.format(client)
 
