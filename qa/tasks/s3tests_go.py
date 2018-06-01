@@ -186,7 +186,7 @@ class S3tests_go(Task):
         Configure users for this section by stashing away keys, ids, and
         email addresses.
         """
-        log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
+        log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
         log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
         s3tests_conf[section].setdefault('user_id', user)
         s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
@@ -203,18 +203,19 @@ class S3tests_go(Task):
         """
         log.info("S3 Tests Go: Creating users...")
         ctx = self.ctx
-        cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
+        all_clients = ['client.{id}'.format(id=id_)
+                for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         users = {'s3-main': 'tester', 's3-alt': 'johndoe'}
         s3tests_conf = self.s3tests_skelethon_config()
-        for (host, roles) in cluster.remotes.iteritems():
-            log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
+        for client in all_clients:
+            # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for section, user in users.items():
                 log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
-                self._config_user(s3tests_conf=s3tests_conf, section='{sect}'.format(sect=section), user='{user}.{host}'.format(user=user, host=host))
-                log.debug('S3 Tests Go: Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=host))
+                self._config_user(s3tests_conf=s3tests_conf, section='{sect}'.format(sect=section), user='{user}.{client}'.format(user=user, client=client))
+                log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=s3tests_conf[section]['user_id'], host=client))
                 log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
-                cluster_name, daemon_type, client_id = teuthology.split_role(host)
+                cluster_name, daemon_type, client_id = teuthology.split_role(client)
                 client_with_id = daemon_type + '.' + client_id
                 ctx.cluster.run(
                     args=[
