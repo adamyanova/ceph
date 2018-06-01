@@ -208,7 +208,7 @@ class S3tests_go(Task):
         for (host, roles) in cluster.remotes.iteritems():
             log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for (section, user) in users:
-                self._config_user(s3tests_conf, section, '{user}.{host}'.format(user=user, host=host))
+                self._config_user(s3tests_conf=s3tests_conf, section=section, user='{user}.{host}'.format(user=user, host=host))
                 log.debug('S3 Tests Go: Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=host))
                 cluster_name, daemon_type, client_id = teuthology.split_role(host)
                 client_with_id = daemon_type + '.' + client_id
