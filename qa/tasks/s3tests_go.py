@@ -287,10 +287,9 @@ class S3tests_go(Task):
         log.info("S3 Tests Go: Generate skelethon config file")
         all_clients = ['client.{id}'.format(id=id_)
                         for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        log.info("S3 Tests Go: List all_clients: {clts}".format(all_clients))
+                        # the iterator is needed because all_roles_of_type() is a generator
+        log.info("S3 Tests Go: List all_clients: {clts}".format(clts=all_clients))
         clients = 'client.0'
-        roles = teuthology.all_roles(self.ctx.cluster)
-        log.info("S3 Tests Go: roles {roles}".format(roles=roles))
         s3tests_conf = {}
         for client in clients:
             endpoint = ctx.rgw.role_endpoints.get(client)
