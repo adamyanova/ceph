@@ -5,6 +5,12 @@ from cStringIO import StringIO
 from configobj import ConfigObj
 import logging
 
+import base64
+import os
+import random
+import string
+
+
 from teuthology import misc as teuthology
 from teuthology.exceptions import ConfigError
 from teuthology.task import Task
@@ -175,7 +181,7 @@ class S3tests_go(Task):
                 stdout=StringIO()
                 )
 
-    def _config_user(s3tests_conf, section, user):
+    def _config_user(self, s3tests_conf, section, user):
         """
         Configure users for this section by stashing away keys, ids, and
         email addresses.
@@ -183,9 +189,9 @@ class S3tests_go(Task):
         s3tests_conf[section].setdefault('user_id', user)
         s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
         s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
-        s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.uppercase) for i in xrange(20)))
+        s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
         s3tests_conf[section].setdefault('secret_key', base64.b64encode(os.urandom(40)))
-        s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in xrange(10)))
+        s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
         s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
         s3tests_conf[section].setdefault('totp_seconds', '5')
 
@@ -201,7 +207,7 @@ class S3tests_go(Task):
         s3tests_conf = self.s3tests_skelethon_config()
         for (host, roles) in cluster.remotes.iteritems():
             log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
-            for (section, user) in users.iteritems():
+            for (section, user) in users:
                 self._config_user(s3tests_conf, section, '{user}.{host}'.format(user=user, host=host))
                 log.debug('S3 Tests Go: Creating user {user} on {host}'.format(user=s3tests_conf[section]['user_id'], host=host))
                 cluster_name, daemon_type, client_id = teuthology.split_role(host)
