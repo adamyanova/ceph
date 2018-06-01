@@ -197,6 +197,10 @@ class S3tests_go(Task):
         s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
         s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
         s3tests_conf[section].setdefault('totp_seconds', '5')
+        s3tests_conf[section].setdefault('kmskeyid','barbican_key_id')
+        s3tests_conf[section].setdefault('bucket', 'bucket1')
+        s3tests_conf[section].setdefault('region', 'us-east-1')
+        s3tests_conf[section].setdefault('SSE', 'AES256')
 
     def create_users(self):
         """
@@ -295,9 +299,21 @@ class S3tests_go(Task):
                     'fixtures' : {
                         'bucket_prefix' : 'test' 
                         },
-                    's3 main'  : {},
-                    's3 alt'   : {},
-                    's3 tenant': {},
+                    's3 main'  : {
+                        'host'      : endpoint.hostname,
+                        'port'      : endpoint.port,
+                        'is_secure' : 'yes' if endpoint.cert else 'no',
+                    },
+                    's3 alt'   : {
+                        'host'      : endpoint.hostname,
+                        'port'      : endpoint.port,
+                        'is_secure' : 'yes' if endpoint.cert else 'no', 
+                    },
+                    's3 tenant': {
+                        'host'      : endpoint.hostname,
+                        'port'      : endpoint.port,
+                        'is_secure' : 'yes' if endpoint.cert else 'no',
+                    },
                     }
                 )
         return s3tests_conf
