@@ -287,7 +287,8 @@ class S3tests_go(Task):
         log.info("S3 Tests Go: Generate skelethon config file")
         all_clients = ['client.{id}'.format(id=id_)
                         for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        clients = all_clients.keys()
+        log.info("S3 Tests Go: List all_clients: {clts}".format(all_clients))
+        clients = 'client.0'
         roles = teuthology.all_roles(self.ctx.cluster)
         log.info("S3 Tests Go: roles {roles}".format(roles=roles))
         s3tests_conf = {}
@@ -320,8 +321,6 @@ class S3tests_go(Task):
 #       s3 tests suites
 #   -   add cleanup script to uninstall packages installed in bootstrap.sh
 #   -   read users data from config file
-
-
 
 
 task = S3tests_go
