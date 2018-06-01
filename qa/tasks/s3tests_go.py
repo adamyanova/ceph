@@ -194,9 +194,9 @@ class S3tests_go(Task):
         s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
         s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
         s3tests_conf[section].setdefault('secret_key', base64.b64encode(os.urandom(40)))
-        s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
-        s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
-        s3tests_conf[section].setdefault('totp_seconds', '5')
+        # s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
+        # s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
+        # s3tests_conf[section].setdefault('totp_seconds', '5')
         s3tests_conf[section].setdefault('kmskeyid', 'barbican_key_id')
         s3tests_conf[section].setdefault('bucket', 'bucket1')
         s3tests_conf[section].setdefault('region', 'us-east-1')
@@ -300,7 +300,7 @@ class S3tests_go(Task):
                         'is_secure' : 'yes' if endpoint.cert else 'no',
                         },
                     'fixtures' : {
-                        'bucket_prefix' : 'test' 
+                        'bucket_prefix' : 'joannah' 
                         },
                     's3 main'  : {
                         'host'      : endpoint.hostname,
