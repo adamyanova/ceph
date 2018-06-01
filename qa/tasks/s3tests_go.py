@@ -152,7 +152,8 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         cluster.run(
                 args=['cp', 
-                    '{tdir}/s3-tests/config.toml.sample'.format(tdir=testdir),
+                    '{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client='client.0'),
+                    # '{tdir}/s3-tests/config.toml.sample'.format(tdir=testdir),
                     '{tdir}/s3-tests/config.toml'.format(tdir=testdir)
                 ],
                 stdout=StringIO()
@@ -206,7 +207,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         all_clients = ['client.{id}'.format(id=id_)
                 for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        users = {'s3-main': 'tester', 's3-alt': 'johndoe', 's3-tenant' : 'tenanteduser'}
+        users = {'s3 main': 'tester', 's3 alt': 'johndoe', 's3 tenant' : 'tenanteduser'}
         s3tests_conf = self.s3tests_skelethon_config()
         for client in all_clients:
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
@@ -234,42 +235,14 @@ class S3tests_go(Task):
                     ],
                     stdout=StringIO()
                 )
-            # # client_with_id = daemon_type + '.' + client_id
-            # client_with_id = 'client.0'
-            # ctx.cluster.run(
-            #     args=[
-            #         'adjust-ulimits',
-            #         'ceph-coverage',
-            #         '{tdir}/archive/coverage'.format(tdir=testdir),
-            #         'radosgw-admin',
-            #         '-n', client_with_id,
-            #         'user', 'create',
-            #         '--uid', 'testid',
-            #         '--display-name', 'M. Tester',
-            #         '--access-key', '0555b35654ad1656d804',
-            #         '--secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==',
-            #         '--email', 'tester@ceph.com',
-            #         '--cluster', 'ceph',
-            #     ],
-            #     stdout=StringIO()
-            # )
-            # ctx.cluster.run(
-            #     args=[
-            #         'adjust-ulimits',
-            #         'ceph-coverage',
-            #         '{tdir}/archive/coverage'.format(tdir=testdir),
-            #         'radosgw-admin',
-            #         '-n', client_with_id,
-            #         'user', 'create',
-            #         '--uid', 'johndoe',
-            #         '--display-name', 'John Doe',
-            #         '--access-key', 'NOPQRSTUVWXYZABCDEFG',
-            #         '--secret', 'nopqrstuvwxyzabcdefghijklmnabcdefghijklm',
-            #         '--email', 'johndoe@gmail.com',
-            #         '--cluster', 'ceph',
-            #     ],
-            #     stdout=StringIO()
-            # )
+            conf_fp = StringIO()
+            s3tests_conf[client].write(conf_fp)
+            teuthology.write_file(
+                    remote=s3tests_conf[client]['DEFAULT']['host'],
+                    path='{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client),
+                    data=conf_fp.getvalue(),
+                )
+
 
     def delete_users(self):
         log.info("S3 Tests Go: Deleting users...")
@@ -320,9 +293,9 @@ class S3tests_go(Task):
                     'fixtures' : {
                         'bucket_prefix' : 'test' 
                         },
-                    's3-main'  : {},
-                    's3-alt'   : {},
-                    's3-tenant': {},
+                    's3 main'  : {},
+                    's3 alt'   : {},
+                    's3 tenant': {},
                     }
                 )
         return s3tests_conf
