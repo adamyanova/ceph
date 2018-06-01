@@ -211,7 +211,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         all_clients = ['client.{id}'.format(id=id_)
                 for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        users = {'s3 main': 'tester', 's3 alt': 'johndoe', 's3 tenant' : 'tenanteduser'}
+        users = {'s3main': 'tester', 's3alt': 'johndoe', 's3tenant' : 'tenanteduser'}
         s3tests_conf = self.s3tests_skelethon_config()
         for client in all_clients:
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
@@ -256,7 +256,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         all_clients = ['client.{id}'.format(id=id_)
                 for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        users = {'s3 main': 'tester', 's3 alt': 'johndoe', 's3 tenant' : 'tenanteduser'}
+        users = {'s3main': 'tester', 's3alt': 'johndoe', 's3tenant' : 'tenanteduser'}
         for client in all_clients:
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             s3tests_conf = teuthology.config_file('{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client))
@@ -302,17 +302,17 @@ class S3tests_go(Task):
                     'fixtures' : {
                         'bucket_prefix' : 'joannah' 
                         },
-                    's3 main'  : {
+                    's3main'  : {
                         'host'      : endpoint.hostname,
                         'port'      : endpoint.port,
                         'is_secure' : 'yes' if endpoint.cert else 'no',
                     },
-                    's3 alt'   : {
+                    's3alt'   : {
                         'host'      : endpoint.hostname,
                         'port'      : endpoint.port,
                         'is_secure' : 'yes' if endpoint.cert else 'no', 
                     },
-                    's3 tenant': {
+                    's3tenant': {
                         'host'      : endpoint.hostname,
                         'port'      : endpoint.port,
                         'is_secure' : 'yes' if endpoint.cert else 'no',
