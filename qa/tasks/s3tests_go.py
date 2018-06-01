@@ -186,6 +186,8 @@ class S3tests_go(Task):
         Configure users for this section by stashing away keys, ids, and
         email addresses.
         """
+        log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
+        log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
         s3tests_conf[section].setdefault('user_id', user)
         s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
         s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
@@ -203,7 +205,7 @@ class S3tests_go(Task):
         ctx = self.ctx
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        users = {'s3 main': 'tester', 's3 alt': 'johndoe'}
+        users = {'s3-main': 'tester', 's3-alt': 'johndoe'}
         s3tests_conf = self.s3tests_skelethon_config()
         for (host, roles) in cluster.remotes.iteritems():
             log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
@@ -317,9 +319,9 @@ class S3tests_go(Task):
                     'fixtures' : {
                         'bucket_prefix' : 'test' 
                         },
-                    's3 main'  : {},
-                    's3 alt'   : {},
-                    's3 tenant': {},
+                    's3-main'  : {},
+                    's3-alt'   : {},
+                    's3-tenant': {},
                     }
                 )
         return s3tests_conf
