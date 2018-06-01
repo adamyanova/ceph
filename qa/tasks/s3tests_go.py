@@ -197,7 +197,7 @@ class S3tests_go(Task):
         s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
         s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
         s3tests_conf[section].setdefault('totp_seconds', '5')
-        s3tests_conf[section].setdefault('kmskeyid','barbican_key_id')
+        s3tests_conf[section].setdefault('kmskeyid', 'barbican_key_id')
         s3tests_conf[section].setdefault('bucket', 'bucket1')
         s3tests_conf[section].setdefault('region', 'us-east-1')
         s3tests_conf[section].setdefault('SSE', 'AES256')
@@ -253,26 +253,29 @@ class S3tests_go(Task):
     def delete_users(self):
         log.info("S3 Tests Go: Deleting users...")
         ctx = self.ctx
-        cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
-        for (host, roles) in cluster.remotes.iteritems():
-            # cluster_name, daemon_type, client_id = teuthology.split_role roles)
-            # client_with_id = daemon_type + '.' + client_id
-            client_with_id = 'client.0'
-            ctx.cluster.run(
-                args=[
-                    'adjust-ulimits',
-                    'ceph-coverage',
-                    '{tdir}/archive/coverage'.format(tdir=testdir),
-                    'radosgw-admin',
-                    '-n', client_with_id,
-                    'user', 'rm',
-                    '--uid', 'testid',
-                    '--purge-data',
-                    '--cluster', 'ceph',
-                    ],
-                    stdout=StringIO()
-                )
+        all_clients = ['client.{id}'.format(id=id_)
+                for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
+        users = {'s3 main': 'tester', 's3 alt': 'johndoe', 's3 tenant' : 'tenanteduser'}
+        for client in all_clients:
+            # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
+            s3tests_conf = teuthology.config_file('{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client))
+            for section, user in users.items():
+                client_with_id = 'client.0'
+                ctx.cluster.run(
+                    args=[
+                        'adjust-ulimits',
+                        'ceph-coverage',
+                        '{tdir}/archive/coverage'.format(tdir=testdir),
+                        'radosgw-admin',
+                        '-n', client_with_id,
+                        'user', 'rm',
+                        '--uid', s3tests_conf[section]['user_id'],
+                        '--purge-data',
+                        '--cluster', 'ceph',
+                        ],
+                        stdout=StringIO()
+                    )
 
     def s3tests_skelethon_config(self):
         log.info("S3 Tests Go: Generate skelethon config file")
