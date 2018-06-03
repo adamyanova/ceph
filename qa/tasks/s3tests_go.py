@@ -173,7 +173,7 @@ class S3tests_go(Task):
                     'rm',
                     '-rf',
                     '{tdir}/s3-tests'.format(tdir=testdir),
-                    # '{tdir}/../go'.format(tdir=testdir)
+                    '{tdir}/../go'.format(tdir=testdir)
                     ],
                 stdout=StringIO()
                 )
