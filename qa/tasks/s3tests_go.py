@@ -119,10 +119,6 @@ class S3tests_go(Task):
                 args=['GOPATH=/home/ubuntu/go'],
                 stdout=StringIO()
             )
-            cluster.run(
-                args=['echo',  run.Raw('$'), 'GOPATH'],
-                stdout=StringIO()
-            )
 
     def install_tests_dependencies(self):
         log.info("S3 Tests Go: Installing tests dependencies...")
@@ -195,6 +191,9 @@ class S3tests_go(Task):
         if section is 's3main':
             s3tests_conf[section].setdefault('access_key', '"0555b35654ad1656d804"')
             s3tests_conf[section].setdefault('secret_key', '"h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q=="')
+        elif section is 's3alt':
+            s3tests_conf[section].setdefault('access_key', '"NOPQRSTUVWXYZABCDEFG"')
+            s3tests_conf[section].setdefault('secret_key', '"nopqrstuvwxyzabcdefghijklmnabcdefghijklm"')
         else:
             s3tests_conf[section].setdefault('access_key', '""'.join(random.choice(string.ascii_uppercase) for i in range(20)))
             skey = base64.b64encode(os.urandom(40))
