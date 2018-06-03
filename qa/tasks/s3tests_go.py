@@ -198,9 +198,9 @@ class S3tests_go(Task):
             s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
             skey = base64.b64encode(os.urandom(40))
             s3tests_conf[section].setdefault('secret_key', '{key}'.format(key=skey))
-        s3tests_conf[section].setdefault('kmskeyid', "barbican_key_id")
-        s3tests_conf[section].setdefault('bucket', '"{bucket}"'.format(bucket='bucket1'))
-        s3tests_conf[section].setdefault('region', '"{reg}"'.format(reg='us-east-1'))
+        s3tests_conf[section].setdefault('kmskeyid', "\"barbican_key_id\"")
+        s3tests_conf[section].setdefault('bucket', '\"{bucket}\"'.format(bucket='bucket1'))
+        s3tests_conf[section].setdefault('region', '\"{reg}\"'.format(reg='us-east-1'))
         s3tests_conf[section].setdefault('SSE', 'AES256')
 
     def create_users(self):
