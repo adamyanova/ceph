@@ -195,9 +195,9 @@ class S3tests_go(Task):
             s3tests_conf[section].setdefault('access_key', '"NOPQRSTUVWXYZABCDEFG"')
             s3tests_conf[section].setdefault('secret_key', '"nopqrstuvwxyzabcdefghijklmnabcdefghijklm"')
         else:
-            s3tests_conf[section].setdefault('access_key', '""'.join(random.choice(string.ascii_uppercase) for i in range(20)))
+            s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
             skey = base64.b64encode(os.urandom(40))
-            s3tests_conf[section].setdefault('secret_key', '"{key}"'.format(key=skey))
+            s3tests_conf[section].setdefault('secret_key', '{key}'.format(key=skey))
         # s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
         # s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
         # s3tests_conf[section].setdefault('totp_seconds', '5')
