@@ -80,11 +80,11 @@ class S3tests_go(Task):
         s3_branches = ['wip-foo']
         for (host, roles) in cluster.remotes.iteritems():
             cluster.run(
-                args=['echo', '"S3 Tests Go: Client is {clt}"'.format(clt = host)],
+                args=['echo', 'S3 Tests Go: Client is {clt}'.format(clt = host)],
                 stdout=StringIO()
             )
             cluster.run(
-                args=['echo', '"S3 Tests Go: Cluster config is: {cfg}"'.format(cfg = roles)],
+                args=['echo', 'S3 Tests Go: Cluster config is: {cfg}'.format(cfg = roles)],
                 stdout=StringIO()
             )
             cluster.run(
@@ -163,7 +163,7 @@ class S3tests_go(Task):
             )
 
     def remove_tests(self):
-        log.info('"S3 Tests Go: Removing s3-tests...')
+        log.info('S3 Tests Go: Removing s3-tests...')
         ctx = self.ctx
         cluster = ctx.cluster
         testdir = teuthology.get_testdir(ctx)
@@ -185,15 +185,15 @@ class S3tests_go(Task):
         """
         log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
         log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
-        s3tests_conf[section].setdefault('user_id', '"{user}"'.format(user=user))
-        s3tests_conf[section].setdefault('email', '"{user}_test@test.test"'.format(user=user))
-        s3tests_conf[section].setdefault('display_name', '"Ms. {user}"'.format(user=user))
+        s3tests_conf[section].setdefault('user_id', '{user}'.format(user=user))
+        s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
+        s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
         if section is 's3main':
-            s3tests_conf[section].setdefault('access_key', '"0555b35654ad1656d804"')
-            s3tests_conf[section].setdefault('secret_key', '"h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q=="')
+            s3tests_conf[section].setdefault('access_key', '0555b35654ad1656d804')
+            s3tests_conf[section].setdefault('secret_key', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==')
         elif section is 's3alt':
-            s3tests_conf[section].setdefault('access_key', '"NOPQRSTUVWXYZABCDEFG"')
-            s3tests_conf[section].setdefault('secret_key', '"nopqrstuvwxyzabcdefghijklmnabcdefghijklm"')
+            s3tests_conf[section].setdefault('access_key', 'NOPQRSTUVWXYZABCDEFG')
+            s3tests_conf[section].setdefault('secret_key', 'nopqrstuvwxyzabcdefghijklmnabcdefghijklm')
         else:
             s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
             skey = base64.b64encode(os.urandom(40))
@@ -201,10 +201,10 @@ class S3tests_go(Task):
         # s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
         # s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
         # s3tests_conf[section].setdefault('totp_seconds', '5')
-        s3tests_conf[section].setdefault('kmskeyid', '"barbican_key_id"')
-        s3tests_conf[section].setdefault('bucket', '"bucket1"')
-        s3tests_conf[section].setdefault('region', '"us-east-1"')
-        s3tests_conf[section].setdefault('SSE', '"AES256"')
+        s3tests_conf[section].setdefault('kmskeyid', 'barbican_key_id')
+        s3tests_conf[section].setdefault('bucket', 'bucket1')
+        s3tests_conf[section].setdefault('region', 'us-east-1')
+        s3tests_conf[section].setdefault('SSE', 'AES256')
 
     def create_users(self):
         """
@@ -299,27 +299,27 @@ class S3tests_go(Task):
                 infile={
                     'DEFAULT':
                         {
-                        'host'      : '"{ep}"'.format(ep=endpoint.hostname),
-                        'port'      : '"{ep}"'.format(ep=endpoint.port),
-                        'is_secure' : '"yes"' if endpoint.cert else '"no"',
+                        'host'      : '{ep}'.format(ep=endpoint.hostname),
+                        'port'      : '{ep}'.format(ep=endpoint.port),
+                        'is_secure' : 'yes' if endpoint.cert else 'no"',
                         },
                     'fixtures' : {
-                        'bucket_prefix' : '"joannah"' 
+                        'bucket_prefix' : 'joannah' 
                         },
                     's3main'  : {
-                        'host'      : '"{ep}"'.format(ep=endpoint.hostname),
-                        'port'      : '"{ep}"'.format(ep=endpoint.port),
-                        'is_secure' : '"yes"' if endpoint.cert else '"no"',
+                        'host'      : '{ep}'.format(ep=endpoint.hostname),
+                        'port'      : '{ep}'.format(ep=endpoint.port),
+                        'is_secure' : 'yes' if endpoint.cert else 'no"',
                     },
                     's3alt'   : {
-                        'host'      : '"{ep}"'.format(ep=endpoint.hostname),
-                        'port'      : '"{ep}"'.format(ep=endpoint.port),
-                        'is_secure' : '"yes"' if endpoint.cert else '"no"',
+                        'host'      : '{ep}'.format(ep=endpoint.hostname),
+                        'port'      : '{ep}'.format(ep=endpoint.port),
+                        'is_secure' : 'yes' if endpoint.cert else 'no"',
                     },
                     's3tenant': {
-                        'host'      : '"{ep}"'.format(ep=endpoint.hostname),
-                        'port'      : '"{ep}"'.format(ep=endpoint.port),
-                        'is_secure' : '"yes"' if endpoint.cert else '"no"',
+                        'host'      : '{ep}'.format(ep=endpoint.hostname),
+                        'port'      : '{ep}'.format(ep=endpoint.port),
+                        'is_secure' : 'yes' if endpoint.cert else 'no"',
                     },
                     }
                 )
