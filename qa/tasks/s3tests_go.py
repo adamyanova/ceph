@@ -185,7 +185,7 @@ class S3tests_go(Task):
         """
         log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
         log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
-        s3tests_conf[section].setdefault('user_id', '{user}'.format(user=user))
+        # s3tests_conf[section].setdefault('user_id', '{user}'.format(user=user))
         s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
         s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
         if section is 's3main':
@@ -198,9 +198,6 @@ class S3tests_go(Task):
             s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
             skey = base64.b64encode(os.urandom(40))
             s3tests_conf[section].setdefault('secret_key', '{key}'.format(key=skey))
-        # s3tests_conf[section].setdefault('totp_serial', ''.join(random.choice(string.digits) for i in range(10)))
-        # s3tests_conf[section].setdefault('totp_seed', base64.b32encode(os.urandom(40)))
-        # s3tests_conf[section].setdefault('totp_seconds', '5')
         s3tests_conf[section].setdefault('kmskeyid', 'barbican_key_id')
         s3tests_conf[section].setdefault('bucket', 'bucket1')
         s3tests_conf[section].setdefault('region', 'us-east-1')
@@ -234,7 +231,7 @@ class S3tests_go(Task):
                         'radosgw-admin',
                         '-n', client_with_id,
                         'user', 'create',
-                        '--uid', s3tests_conf[client][section]['user_id'],
+                        '--uid', user,
                         '--display-name', s3tests_conf[client][section]['display_name'],
                         '--access-key', s3tests_conf[client][section]['access_key'],
                         '--secret', s3tests_conf[client][section]['secret_key'],
@@ -274,7 +271,7 @@ class S3tests_go(Task):
                         'radosgw-admin',
                         '-n', client_with_id,
                         'user', 'rm',
-                        '--uid', s3tests_conf[section]['user_id'],
+                        '--uid', user,
                         '--purge-data',
                         '--cluster', 'ceph',
                         ],
