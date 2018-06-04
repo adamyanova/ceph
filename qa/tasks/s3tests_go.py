@@ -205,7 +205,7 @@ class S3tests_go(Task):
         email addresses.
         """
 
-        self._set_cfg_entry(s3tests_conf[section], 'user_id', '{user}'.format(user=user))
+        # self._set_cfg_entry(s3tests_conf[section], 'user_id', '{user}'.format(user=user))
         self._set_cfg_entry(s3tests_conf[section], 'email', '{user}_test@test.test'.format(user=user))
         self._set_cfg_entry(s3tests_conf[section], 'display_name', 'Ms. {user}'.format(user = user))
         access_key = ''.join(random.choice(string.ascii_uppercase) for i in range(20))
@@ -218,9 +218,11 @@ class S3tests_go(Task):
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
         endpoint = self.ctx.rgw.role_endpoints.get('client.0')
+        self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ep}'.format(ep = endpoint))
         self._set_cfg_entry(s3tests_conf[section], 'host', '{ep}'.format(ep = endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', '{ep}'.format(ep = endpoint.port))
         self._set_cfg_entry(s3tests_conf[section], 'is_secure','yes' if endpoint.cert else 'no')
+
 
         log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
         log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
