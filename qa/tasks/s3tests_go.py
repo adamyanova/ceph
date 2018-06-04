@@ -9,7 +9,7 @@ import base64
 import os
 import random
 import string
-import ruamel.yaml
+# import ruamel.yaml
 
 from teuthology import misc as teuthology
 from teuthology.exceptions import ConfigError
