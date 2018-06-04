@@ -28,14 +28,14 @@ class S3tests_go(Task):
     def __init__(self, ctx, config):
         super(S3tests_go, self).__init__(ctx, config)
         self.log = log
-        log.info('S3 Tests Go: In __init__ step')
+        log.debug('S3 Tests Go: In __init__ step')
         assert hasattr(ctx, 'rgw'), 'S3tests_go must run after the rgw task'
 
     def setup(self):
         super(S3tests_go, self).setup()
         config = self.config
-        log.info('S3 Tests Go: In setup step')
-        log.debug('config is: %r', config)
+        log.debug('S3 Tests Go: In setup step')
+        # log.debug('config is: %r', config)
         self.download()
         self.install_packages()
         self.setup_go()
@@ -43,7 +43,7 @@ class S3tests_go(Task):
 
     def begin(self):
         super(S3tests_go, self).begin()
-        log.info('S3 Tests Go: In begin step')
+        log.debug('S3 Tests Go: In begin step')
         ctx = self.ctx
         log.debug('S3 Tests Go: ctx is: %r', ctx)
         cluster = ctx.cluster
@@ -334,10 +334,8 @@ class S3tests_go(Task):
 
 
 # TODO: 
-#   -   write rgw client data to yaml file for configuring the 
-#       s3 tests suites
-#   -   add cleanup script to uninstall packages installed in bootstrap.sh
-#   -   read users data from config file
+#   -   keep list of user ids for cleanup at the end
+#   -   
 
 
 task = S3tests_go
