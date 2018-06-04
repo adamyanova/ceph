@@ -195,8 +195,8 @@ class S3tests_go(Task):
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         assert endpoint, 'S3 Tests Go: No RGW endpoint for {clt}'.format(clt = client) 
 
-        cfg_dict['DEFAULT']['host'] = endpoint.hostname
-        cfg_dict['DEFAULT']['port'] = endpoint.port
+        cfg_dict['DEFAULT']['host'] = '172.21.15.019'
+        cfg_dict['DEFAULT']['port'] = 7280
         cfg_dict['DEFAULT']['is_secure'] = "yes" if endpoint.cert else "no"
 
     def _config_user(self, s3tests_conf, section, user):
@@ -218,9 +218,9 @@ class S3tests_go(Task):
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
         endpoint = self.ctx.rgw.role_endpoints.get('client.0')
-        self._set_cfg_entry(s3tests_conf[section], 'endpoint', endpoint)
-        self._set_cfg_entry(s3tests_conf[section], 'host', endpoint.hostname)
-        self._set_cfg_entry(s3tests_conf[section], 'port',  endpoint.port)
+        self._set_cfg_entry(s3tests_conf[section], 'endpoint', '172.21.15.019:7280')
+        self._set_cfg_entry(s3tests_conf[section], 'host', '172.21.15.019')
+        self._set_cfg_entry(s3tests_conf[section], 'port',  7280)
         self._set_cfg_entry(s3tests_conf[section], 'is_secure', "yes" if endpoint.cert else "no")
 
 
