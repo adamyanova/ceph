@@ -189,14 +189,14 @@ class S3tests_go(Task):
         s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
         if section is 's3main':
             s3tests_conf[section].setdefault('access_key', '0555b35654ad1656d804')
-            s3tests_conf[section].setdefault('secret_key', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==')
+            s3tests_conf[section].setdefault('access_secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==')
         elif section is 's3alt':
             s3tests_conf[section].setdefault('access_key', 'NOPQRSTUVWXYZABCDEFG')
-            s3tests_conf[section].setdefault('secret_key', 'nopqrstuvwxyzabcdefghijklmnabcdefghijklm')
+            s3tests_conf[section].setdefault('access_secret', 'nopqrstuvwxyzabcdefghijklmnabcdefghijklm')
         else:
             s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
             skey = base64.b64encode(os.urandom(40))
-            s3tests_conf[section].setdefault('secret_key', '{key}'.format(key=skey))
+            s3tests_conf[section].setdefault('access_secret', '{key}'.format(key=skey))
         # s3tests_conf[section].setdefault('kmskeyid', """barbican_key_id""")
         # s3tests_conf[section].setdefault('bucket', '{bucket}'.format(bucket='bucket1'))
         # s3tests_conf[section].setdefault('region', """{reg}""".format(reg='us-east-1'))
@@ -235,7 +235,7 @@ class S3tests_go(Task):
                         '--uid', user,
                         '--display-name', s3tests_conf[section]['display_name'],
                         '--access-key', s3tests_conf[section]['access_key'],
-                        '--secret', s3tests_conf[section]['secret_key'],
+                        '--secret', s3tests_conf[section]['access_secret'],
                         '--email', s3tests_conf[section]['email'],
                         '--cluster', cluster_name,
                     ],
