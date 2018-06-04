@@ -9,6 +9,7 @@ import base64
 import os
 import random
 import string
+import yaml
 
 from teuthology import misc as teuthology
 from teuthology.exceptions import ConfigError
@@ -253,14 +254,20 @@ class S3tests_go(Task):
 
             (remote,) = ctx.cluster.only(client).remotes.keys()   
             log.debug("S3 Tests Go: remote is {rmt}".format(rmt=remote)) 
-            # conf_fp = StringIO()
-            # s3tests_conf.write(conf_fp)
-            s3cfg_list = s3tests_conf.items()
+            with open('tmp.yaml', 'w') as outfile:
+                yaml.dump(s3tests_conf, outfile, default_flow_style=False)
+
+            conf_fp = StringIO()
+            with open('tmp.yaml', 'r') as infile:
+                for line in infile:
+                    conf_fp.write(line)
+
             teuthology.write_file(
                     remote=remote,
                     path='{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client),
-                    data=s3cfg_list.getvalue(),
+                    data=conf_fp.getvalue(),
                 )
+            os.remove('tmp.yaml')
 
 
     def delete_users(self):
