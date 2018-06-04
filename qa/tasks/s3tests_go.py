@@ -29,217 +29,152 @@ class S3tests_go(Task):
     def __init__(self, ctx, config):
         super(S3tests_go, self).__init__(ctx, config)
         self.log = log
-        log.debug('S3 Tests Go: In __init__ step')
+        log.debug('S3 Tests Go: __INIT__ ')
         assert hasattr(ctx, 'rgw'), 'S3tests_go must run after the rgw task'
+        self.all_clients = ['client.{id}'.format(id=id_)
+                for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
+        self.gopath = '/home/ubuntu/go'
+        self.users = {'s3main': 'tester', 's3alt': 'johndoe'}
+
 
     def setup(self):
         super(S3tests_go, self).setup()
-        config = self.config
-        log.debug('S3 Tests Go: In setup step')
-        # log.debug('config is: %r', config)
-        self.download()
-        self.install_packages()
-        self.setup_go()
-        self.install_tests_dependencies()
+        log.debug('S3 Tests Go: SETUP')
+        self.download_test_suite()
+        self.install_required_packages()
 
     def begin(self):
         super(S3tests_go, self).begin()
-        log.debug('S3 Tests Go: In begin step')
-        ctx = self.ctx
-        log.debug('S3 Tests Go: ctx is: %r', ctx)
-        cluster = ctx.cluster
-        testdir = teuthology.get_testdir(ctx)
-        for (host, roles) in cluster.remotes.iteritems():
-            log.info('S3 Tests Go: Client {clt} config is: {cfg}'.format(clt = host, cfg = roles))
+        log.debug('S3 Tests Go: BEGIN')
+        log.debug('S3 Tests Go: ctx is: {cxt}'.format(ctx=self.ctx))
+        for (host, roles) in self.ctx.cluster.remotes.iteritems():
+            log.info('S3 Tests Go: Cluster config is: {cfg}'.format(cfg = roles))
+            log.info('S3 Tests Go: Host is: {host}'.format(host = host))
         self.create_users()
         self.run_tests()
+
+    def run_tests(self):
+        log.info("S3 Tests Go: Running tests...")
+        testdir = teuthology.get_testdir(self.ctx)
+        for client in self.all_clients:
+            # This could cause a problem if two clients run on the same machine
+            # and the following lines are not executed sequentially
+            self.ctx.cluster.only(client).run(
+                    args = ['cp', 
+                        '{tdir}/archive/s3-tests-go.{client}.conf'.format(tdir = testdir, client = client),
+                        '{tdir}/s3-tests-go/config.yaml'.format(tdir = testdir)
+                    ],
+                    stdout = StringIO()
+                )
+            self.ctx.cluster.only(client).run(
+                    args = ['cd', 
+                        '{tdir}/s3-tests-go/s3tests'.format(tdir = testdir),
+                        run.Raw(';'),
+                        'go', 'test', '-v'
+                    ],
+                    stdout = StringIO()
+                )
         
     def teardown(self):
         super(S3tests_go, self).teardown()
-        log.info('S3 Tests Go: Teardown step')
+        log.debug('S3 Tests Go: TEARDOWN')
         self.delete_users()
         self.remove_tests()
         
-
-    def install_packages(self):
-        log.info("S3 Tests Go: Installing required packages...")
-        ctx = self.ctx
-        cluster = ctx.cluster
-        testdir = teuthology.get_testdir(ctx)
-        for (host, roles) in cluster.remotes.iteritems():
-            cluster.run(
-                args=['{tdir}/s3-tests/bootstrap.sh'.format(tdir=testdir)],
-                stdout=StringIO()
-            )
-
-    def download(self):
+    def download_test_suite(self):
         log.info("S3 Tests Go: Downloading test suite...")
-        ctx = self.ctx
-        cluster = ctx.cluster
-        testdir = teuthology.get_testdir(ctx)
-        s3_branches = ['wip-foo']
-        for (host, roles) in cluster.remotes.iteritems():
-            cluster.run(
-                args=['echo', 'S3 Tests Go: Client is {clt}'.format(clt = host)],
-                stdout=StringIO()
+        testdir = teuthology.get_testdir(self.ctx)
+        if 's3tests_branch' in  self.ctx.config:
+            branch = self.ctx.config['s3tests_branch']
+        if 's3tests_repo' in self.ct.config:
+            repo = self.ctx.config['s3tests_repo']
+        if branch is None:
+            branch = 'master'
+        if repo is None:
+            repo = 'https://github.com/adamyanova/go_s3tests.git'
+        self.ctx.cluster.run(
+            args = [
+                'git', 'clone',
+                '-b', branch,
+                repo,
+                '{tdir}/s3-tests-go'.format(tdir=testdir),
+            ],
+            stdout = StringIO()
             )
-            cluster.run(
-                args=['echo', 'S3 Tests Go: Cluster config is: {cfg}'.format(cfg = roles)],
-                stdout=StringIO()
-            )
-            cluster.run(
-                args=[
-                    'git', 'clone',
-                    '-b', 'master',
-                    'https://github.com/adamyanova/go_s3tests.git',
-                    '{tdir}/s3-tests'.format(tdir=testdir),
-                    ],
-                stdout=StringIO()
-                )
-            cluster.run(
-                args=['echo', '{tdir}/s3-tests'.format(tdir=testdir)],
-                stdout=StringIO()
-            )
-            cluster.run(
-                args=['ls','{tdir}/s3-tests'.format(tdir=testdir)], 
-                stdout=StringIO()
-                )
+        # self.ctx.cluster.run(
+        #     args = ['echo', '{tdir}/s3-tests-go'.format(tdir=testdir)],
+        #     stdout = StringIO()
+        # )
+        # self.ctx.cluster.run(
+        #     args = ['ls','{tdir}/s3-tests-go'.format(tdir=testdir)], 
+        #     stdout = StringIO()
+        #     )
 
-    def setup_go(self):
-        log.info("S3 Tests Go: Setting up Go...")
-        ctx = self.ctx
-        cluster = ctx.cluster
-        testdir = teuthology.get_testdir(ctx)
-        for (host, roles) in cluster.remotes.iteritems():
-            cluster.run(
-                args=['mkdir', '{tdir}/../go'.format(tdir=testdir)],
-                stdout=StringIO()
-                )
-            cluster.run(
-                args=['GOPATH=/home/ubuntu/go'],
-                stdout=StringIO()
+    def install_required_packages(self):
+        log.info("S3 Tests Go: Installing required packages...")
+        testdir = teuthology.get_testdir(self.ctx)
+        self.ctx.cluster.run(
+            args = ['{tdir}/s3-tests-go/bootstrap.sh'.format(tdir=testdir)],
+            stdout = StringIO()
+        )
+        self._setup_golang()
+        self._install_tests_utils()
+    
+    def _setup_golang(self):
+        log.info("S3 Tests Go: Setting up golang...")
+        self.ctx.cluster.run(
+            args = ['mkdir', 
+                self.gopath,
+                run.Raw('&&'),
+                'GOPATH={path}'.format(path = self.gopath)
+            ],
+            stdout = StringIO()
             )
 
-    def install_tests_dependencies(self):
+    def _install_tests_utils(self):
         log.info("S3 Tests Go: Installing tests dependencies...")
-        ctx = self.ctx
-        cluster = ctx.cluster
-        testdir = teuthology.get_testdir(ctx)
+        testdir = teuthology.get_testdir(self.ctx)
         # explicit download of stretchr/testify is required
-        cluster.run(
-                args=['cd', 
-                    '{tdir}/s3-tests'.format(tdir=testdir),
+        self.ctx.cluster.run(
+                args = ['cd', 
+                    '{tdir}/s3-tests-go'.format(tdir = testdir),
                     run.Raw(';'),
                     'go', 'get', '-d', './...',
                     run.Raw(';'),
                     'go', 'get', 'github.com/stretchr/testify',
-                    ],
-                stdout=StringIO()
-            )
-        cluster.run(
-                args=['ls', '/home/ubuntu/go/src/github.com/'],
-                stdout=StringIO()
-            )
-
-    def run_tests(self):
-        log.info("S3 Tests Go: Running tests...")
-        ctx = self.ctx
-        cluster = ctx.cluster
-        testdir = teuthology.get_testdir(ctx)
-        cluster.run(
-                args=['cp', 
-                    # '{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client='client.0'),
-                    '{tdir}/s3-tests/config.yaml.sample'.format(tdir=testdir),
-                    '{tdir}/s3-tests/config.yaml'.format(tdir=testdir)
                 ],
-                stdout=StringIO()
+                stdout = StringIO()
             )
-        cluster.run(
-                args=['cd', 
-                    '{tdir}/s3-tests/s3tests'.format(tdir=testdir),
-                    run.Raw(';'),
-                    'go', 'test', '-v'],
-                stdout=StringIO()
-            )
-
-    def remove_tests(self):
-        log.info('S3 Tests Go: Removing s3-tests...')
-        ctx = self.ctx
-        cluster = ctx.cluster
-        testdir = teuthology.get_testdir(ctx)
-        for (host, roles) in cluster.remotes.iteritems():
-            cluster.run(
-                args=[
-                    'rm',
-                    '-rf',
-                    '{tdir}/s3-tests'.format(tdir=testdir),
-                    '{tdir}/../go'.format(tdir=testdir)
-                    ],
-                stdout=StringIO()
-                )
-
-    def _config_user(self, s3tests_conf, section, user):
-        """
-        Configure users for this section by stashing away keys, ids, and
-        email addresses.
-        """
-        if not ('display_name' in s3tests_conf[section]):
-            s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
-        elif s3tests_conf[section]['display_name'] is None:
-            s3tests_conf[section]['display_name'] = 'Ms. {user}'.format(user=user)
-
-
-        # s3tests_conf[section].setdefault('user_id', '{user}'.format(user=user))
-        # s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
-        # s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
-        # if section is 's3main':
-        #     s3tests_conf[section].setdefault('access_key', '0555b35654ad1656d804')
-        #     s3tests_conf[section].setdefault('access_secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==')
-        # elif section is 's3alt':
-        #     s3tests_conf[section].setdefault('access_key', 'NOPQRSTUVWXYZABCDEFG')
-        #     s3tests_conf[section].setdefault('access_secret', 'nopqrstuvwxyzabcdefghijklmnabcdefghijklm')
-        # else:
-        #     s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
-        #     skey = base64.b64encode(os.urandom(40))
-        #     s3tests_conf[section].setdefault('access_secret', '{key}'.format(key=skey))
-        # s3tests_conf[section].setdefault('kmskeyid', """barbican_key_id""")
-        # s3tests_conf[section].setdefault('bucket', '{bucket}'.format(bucket='bucket1'))
-        # s3tests_conf[section].setdefault('region', """{reg}""".format(reg='us-east-1'))
-        # s3tests_conf[section].setdefault('SSE', 'AES256')
-
-        log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
-        log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
+        # self.ctx.cluster.run(
+        #         args = ['ls', '/home/ubuntu/go/src/github.com/'],
+        #         stdout = StringIO()
+        #     )
 
     def create_users(self):
         """
         Create a main and an alternative s3 user.
         """
         log.info("S3 Tests Go: Creating users...")
-        ctx = self.ctx
-        testdir = teuthology.get_testdir(ctx)
-        all_clients = ['client.{id}'.format(id=id_)
-                for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        users = {'s3main': 'tester', 's3alt': 'johndoe'}
-        # s3tests_conf = self.s3tests_skelethon_config()
-        s3tests_conf = teuthology.config_file('/home/adamyanova/src/go_s3tests/config.yaml.sample')
+        testdir = teuthology.get_testdir(self.ctx)
+        s3tests_conf = teuthology.config_file('{tdir}/s3-tests-go/teuth.config.yaml')
         log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
-        for client in all_clients:
-            # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
-            for section, user in users.items():
-                # log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
+        for client in self.all_clients:
+            self._s3tests_cfg_default_section(client, s3tests_conf)
+            for section, user in self.users.items():
+                # TODO: Check if users with the same credentials can be created in different clients
+                # and what happens in this case
                 self._config_user(s3tests_conf=s3tests_conf, section=section, user=user)
-                # log.info("S3 Tests Go: s3tests_conf is {s3cfg}"s.format(s3cfg=s3tests_conf))
                 log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=user, client=client))
                 cluster_name, daemon_type, client_id = teuthology.split_role(client)
                 client_with_id = daemon_type + '.' + client_id
-                args=[
+                args = [
                     'adjust-ulimits',
                     'ceph-coverage',
                     '{tdir}/archive/coverage'.format(tdir=testdir),
                     'radosgw-admin',
                     '-n', client_with_id,
                     'user', 'create',
-                    '--uid', user,
+                    '--uid', user, # use the self.users dict to be able to delete it later by uid
                     '--display-name', s3tests_conf[section]['display_name'],
                     '--access-key', s3tests_conf[section]['access_key'],
                     '--secret', s3tests_conf[section]['access_secret'],
@@ -247,104 +182,97 @@ class S3tests_go(Task):
                     '--cluster', cluster_name,
                 ]
                 log.info('{args}'.format(args=args))
-                ctx.cluster.run(
-                    args=args,
-                    stdout=StringIO()
+                self.ctx.cluster.run(
+                    args = args,
+                    stdout = StringIO()
                 )
+            self._write_cfg_file(s3tests_conf, client)
 
-            (remote,) = ctx.cluster.only(client).remotes.keys()   
-            log.debug("S3 Tests Go: remote is {rmt}".format(rmt=remote)) 
-            with open('tmp.yaml', 'w') as outfile:
-                yaml.dump(s3tests_conf, outfile, default_flow_style=False)
+    def _s3tests_cfg_default_section(self, client, cfg_dict):
+        log.info("S3 Tests Go: Add DEFAULT section")
+        endpoint = self.ctx.rgw.role_endpoints.get(client)
+        assert endpoint, 'S3 Tests Go: No RGW endpoint for {clt}'.format(clt = client) 
 
-            conf_fp = StringIO()
-            with open('tmp.yaml', 'r') as infile:
-                for line in infile:
-                    conf_fp.write(line)
+        cfg_dict['DEFAULT']['host'] = '{ep}'.format(ep = endpoint.hostname)
+        cfg_dict['DEFAULT']['port'] = '{ep}'.format(ep = endpoint.port)
+        cfg_dict['DEFAULT']['is_secure'] = 'yes' if endpoint.cert else 'no'
 
-            teuthology.write_file(
-                    remote=remote,
-                    path='{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client),
-                    data=conf_fp.getvalue(),
-                )
-            os.remove('tmp.yaml')
+    def _config_user(self, s3tests_conf, section, user):
+        """
+        Generate missing users data this section by stashing away keys, ids, and
+        email addresses.
+        """
 
+        self._set_cfg_entry(s3tests_conf[section], 'user_id', '{user}'.format(user=user))
+        self._set_cfg_entry(s3tests_conf[section], 'email', '{user}_test@test.test'.format(user=user))
+        self._set_cfg_entry(s3tests_conf[section], 'display_name', 'Ms. {user}'.format(user = user))
+        access_key = ''.join(random.choice(string.ascii_uppercase) for i in range(20))
+        secret = base64.b64encode(os.urandom(40))
+        self._set_cfg_entry(s3tests_conf[section], 'access_key', '{ak}'.format(ak=access_key))
+        self._set_cfg_entry(s3tests_conf[section], 'access_secret', '{sk}'.format(sk=secret))
+        self._set_cfg_entry(s3tests_conf[section], 'kmskeyid', 'barbican_key_id')
+        self._set_cfg_entry(s3tests_conf[section], 'SSE', 'AES256')
+        self._set_cfg_entry(s3tests_conf[section], 'region', 'us-east-1')
+        self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
+
+        log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
+        log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
+
+    def _write_cfg_file(self, cfg_dict, client):
+        testdir = teuthology.get_testdir(self.ctx)
+        (remote,) = self.ctx.cluster.only(client).remotes.keys()   
+        with open('tmp.yaml', 'w') as outfile:
+            yaml.dump(cfg_dict, outfile, default_flow_style = False)
+
+        conf_fp = StringIO()
+        with open('tmp.yaml', 'r') as infile:
+            for line in infile:
+                conf_fp.write(line)
+
+        teuthology.write_file(
+                remote = remote,
+                path = '{tdir}/archive/s3-tests-go.{client}.conf'.format(tdir = testdir, client = client),
+                data = conf_fp.getvalue(),
+            )
+        os.remove('tmp.yaml')
+
+    def _set_cfg_entry(self, cfg_dict, key, value):
+        if not (key in cfg_dict):
+            cfg_dict.setdefault(key, value)
+        elif cfg_dict[key] is None:
+            cfg_dict[key] = value
 
     def delete_users(self):
         log.info("S3 Tests Go: Deleting users...")
-        ctx = self.ctx
-        testdir = teuthology.get_testdir(ctx)
-        all_clients = ['client.{id}'.format(id=id_)
-                for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        users = {'s3main': 'tester', 's3alt': 'johndoe', 's3tenant' : 'tenanteduser'}
-        for client in all_clients:
-            # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
-            s3tests_conf = teuthology.config_file('{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client))
-            for section, user in users.items():
-                client_with_id = 'client.0'
-                ctx.cluster.run(
-                    args=[
+        testdir = teuthology.get_testdir(self.ctx)
+        for client in self.all_clients:
+            for section, user in self.users.items():
+                self.ctx.cluster.run(
+                    args = [
                         'adjust-ulimits',
                         'ceph-coverage',
                         '{tdir}/archive/coverage'.format(tdir=testdir),
                         'radosgw-admin',
-                        '-n', client_with_id,
+                        '-n', client,
                         'user', 'rm',
                         '--uid', user,
                         '--purge-data',
                         '--cluster', 'ceph',
-                        ],
-                        stdout=StringIO()
+                    ],
+                        stdout = StringIO()
                     )
 
-    def s3tests_skelethon_config(self):
-        log.info("S3 Tests Go: Generate skelethon config file")
-        all_clients = ['client.{id}'.format(id=id_)
-                        for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-                        # the iterator is needed because all_roles_of_type() is a generator
-        log.info("S3 Tests Go: List all_clients: {clts}".format(clts=all_clients))
-        # clients = {'client.0'}
-        s3tests_conf = {}
-        # for client in all_clients:
-        log.info("S3 Tests Go: Config for client client.0")
-        endpoint = self.ctx.rgw.role_endpoints.get('client.0')
-        # assert endpoint, 'S3 Tests Go: no rgw endpoint for {}'.format(client)
-
-        s3tests_conf = ConfigObj(
-            indent_type='',
-            infile={
-                'DEFAULT':
-                    {
-                    'host'      : '{ep}'.format(ep=endpoint.hostname),
-                    'port'      : '{ep}'.format(ep=endpoint.port),
-                    'is_secure' : 'yes' if endpoint.cert else 'no',
-                    },
-                'fixtures' : {
-                    'bucket_prefix' : 'joannah' 
-                    },
-                's3main'  : {
-                    'host'      : '{ep}'.format(ep=endpoint.hostname),
-                    'port'      : '{ep}'.format(ep=endpoint.port),
-                    'is_secure' : 'yes' if endpoint.cert else 'no',
-                },
-                's3alt'   : {
-                    'host'      : '{ep}'.format(ep=endpoint.hostname),
-                    'port'      : '{ep}'.format(ep=endpoint.port),
-                    'is_secure' : 'yes' if endpoint.cert else 'no',
-                },
-                's3tenant': {
-                    'host'      : '{ep}'.format(ep=endpoint.hostname),
-                    'port'      : '{ep}'.format(ep=endpoint.port),
-                    'is_secure' : 'yes' if endpoint.cert else 'no',
-                },
-                }
+    def remove_tests(self):
+        log.info('S3 Tests Go: Removing s3-tests-go...')
+        testdir = teuthology.get_testdir(self.ctx)
+        self.ctx.cluster.run(
+            args = [
+                'rm',
+                '-rf',
+                '{tdir}/s3-tests-go'.format(tdir = testdir),
+                '{gopath}'.format(gopath = self.gopath)
+            ],
+            stdout = StringIO()
             )
-        return s3tests_conf
-
-
-# TODO: 
-#   -   keep list of user ids for cleanup at the end
-#   -   
-
 
 task = S3tests_go
