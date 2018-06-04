@@ -185,18 +185,18 @@ class S3tests_go(Task):
         log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
         log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
         # s3tests_conf[section].setdefault('user_id', '{user}'.format(user=user))
-        s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
+        # s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
         s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
-        if section is 's3main':
-            s3tests_conf[section].setdefault('access_key', '0555b35654ad1656d804')
-            s3tests_conf[section].setdefault('access_secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==')
-        elif section is 's3alt':
-            s3tests_conf[section].setdefault('access_key', 'NOPQRSTUVWXYZABCDEFG')
-            s3tests_conf[section].setdefault('access_secret', 'nopqrstuvwxyzabcdefghijklmnabcdefghijklm')
-        else:
-            s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
-            skey = base64.b64encode(os.urandom(40))
-            s3tests_conf[section].setdefault('access_secret', '{key}'.format(key=skey))
+        # if section is 's3main':
+        #     s3tests_conf[section].setdefault('access_key', '0555b35654ad1656d804')
+        #     s3tests_conf[section].setdefault('access_secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==')
+        # elif section is 's3alt':
+        #     s3tests_conf[section].setdefault('access_key', 'NOPQRSTUVWXYZABCDEFG')
+        #     s3tests_conf[section].setdefault('access_secret', 'nopqrstuvwxyzabcdefghijklmnabcdefghijklm')
+        # else:
+        #     s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
+        #     skey = base64.b64encode(os.urandom(40))
+        #     s3tests_conf[section].setdefault('access_secret', '{key}'.format(key=skey))
         # s3tests_conf[section].setdefault('kmskeyid', """barbican_key_id""")
         # s3tests_conf[section].setdefault('bucket', '{bucket}'.format(bucket='bucket1'))
         # s3tests_conf[section].setdefault('region', """{reg}""".format(reg='us-east-1'))
@@ -219,7 +219,7 @@ class S3tests_go(Task):
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for section, user in users.items():
                 # log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
-                # self._config_user(s3tests_conf=s3tests_conf, section=section, user='{user}.{client}'.format(user=user, client=client))
+                self._config_user(s3tests_conf=s3tests_conf, section=section, user=user)
                 # log.info("S3 Tests Go: s3tests_conf is {s3cfg}"s.format(s3cfg=s3tests_conf))
                 log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=user, client=client))
                 cluster_name, daemon_type, client_id = teuthology.split_role(client)
