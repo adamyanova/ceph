@@ -217,6 +217,11 @@ class S3tests_go(Task):
         self._set_cfg_entry(s3tests_conf[section], 'region', 'us-east-1')
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
+        endpoint = self.ctx.rgw.role_endpoints.get('client.0')
+        self._set_cfg_entry(s3tests_conf[section], 'host', '{ep}'.format(ep = endpoint.hostname))
+        self._set_cfg_entry(s3tests_conf[section], 'port', '{ep}'.format(ep = endpoint.port))
+        self._set_cfg_entry(s3tests_conf[section], 'is_secure','yes' if endpoint.cert else 'no')
+
         log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
         log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
 
