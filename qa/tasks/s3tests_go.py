@@ -289,7 +289,7 @@ class S3tests_go(Task):
         # clients = {'client.0'}
         s3tests_conf = {}
         # for client in all_clients:
-        log.info("S3 Tests Go: Config for client {clt}".format(clt=client))
+        log.info("S3 Tests Go: Config for client client.0")
         endpoint = self.ctx.rgw.role_endpoints.get('client.0')
         # assert endpoint, 'S3 Tests Go: no rgw endpoint for {}'.format(client)
 
