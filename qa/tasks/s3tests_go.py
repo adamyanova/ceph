@@ -9,7 +9,6 @@ import base64
 import os
 import random
 import string
-# import ruamel.yaml
 
 from teuthology import misc as teuthology
 from teuthology.exceptions import ConfigError
@@ -213,14 +212,14 @@ class S3tests_go(Task):
         all_clients = ['client.{id}'.format(id=id_)
                 for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         users = {'s3main': 'tester', 's3alt': 'johndoe'}
-        s3tests_conf = self.s3tests_skelethon_config()
-        # s3tests_conf = teuthology.config_file('/home/adamyanova/src/go_s3tests/config.toml.sample')
+        # s3tests_conf = self.s3tests_skelethon_config()
+        s3tests_conf = teuthology.config_file('/home/adamyanova/src/go_s3tests/config.yaml.sample')
         log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
         for client in all_clients:
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for section, user in users.items():
                 # log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
-                self._config_user(s3tests_conf=s3tests_conf, section=section, user='{user}.{client}'.format(user=user, client=client))
+                # self._config_user(s3tests_conf=s3tests_conf, section=section, user='{user}.{client}'.format(user=user, client=client))
                 # log.info("S3 Tests Go: s3tests_conf is {s3cfg}"s.format(s3cfg=s3tests_conf))
                 log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=user, client=client))
                 cluster_name, daemon_type, client_id = teuthology.split_role(client)
