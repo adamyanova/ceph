@@ -197,7 +197,7 @@ class S3tests_go(Task):
 
         cfg_dict['DEFAULT']['host'] = '172.21.15.019'
         cfg_dict['DEFAULT']['port'] = 7280
-        cfg_dict['DEFAULT']['is_secure'] = "yes" if endpoint.cert else "no"
+        cfg_dict['DEFAULT']['is_secure'] = 'no' #"yes" if endpoint.cert else "no"
 
     def _config_user(self, s3tests_conf, section, user):
         """
