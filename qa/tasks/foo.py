@@ -45,7 +45,7 @@ class Foo(Task):
     def begin(self):
         super(Foo, self).begin()
         log.info('In begin step, hello world')
-	ctx = self.ctx
+	    ctx = self.ctx
         log.debug('ctx is: %r', ctx)
         remote = Remote('ubuntu@smithi019.front.sepia.ceph.com')
         remote.run(args=['echo','"hello world: console output 15"'], stdout=StringIO())
