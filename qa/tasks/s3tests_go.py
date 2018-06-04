@@ -86,7 +86,7 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(self.ctx)
         if 's3tests_branch' in  self.ctx.config:
             branch = self.ctx.config['s3tests_branch']
-        if 's3tests_repo' in self.ct.config:
+        if 's3tests_repo' in self.ctx.config:
             repo = self.ctx.config['s3tests_repo']
         if branch is None:
             branch = 'master'
