@@ -182,11 +182,15 @@ class S3tests_go(Task):
         Configure users for this section by stashing away keys, ids, and
         email addresses.
         """
-        log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
-        log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
+        if not ('display_name' in s3tests_conf[section]):
+            s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
+        elif s3tests_conf[section]['display_name'] is None:
+            s3tests_conf[section]['display_name'] = 'Ms. {user}'.format(user=user)
+
+
         # s3tests_conf[section].setdefault('user_id', '{user}'.format(user=user))
         # s3tests_conf[section].setdefault('email', '{user}_test@test.test'.format(user=user))
-        s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
+        # s3tests_conf[section].setdefault('display_name', 'Ms. {user}'.format(user=user))
         # if section is 's3main':
         #     s3tests_conf[section].setdefault('access_key', '0555b35654ad1656d804')
         #     s3tests_conf[section].setdefault('access_secret', 'h7GhxuBLTrlhVUyxSPUKUV8r/2EI4ngqJxD7iBdBYLhwluN30JaT3Q==')
@@ -201,6 +205,9 @@ class S3tests_go(Task):
         # s3tests_conf[section].setdefault('bucket', '{bucket}'.format(bucket='bucket1'))
         # s3tests_conf[section].setdefault('region', """{reg}""".format(reg='us-east-1'))
         # s3tests_conf[section].setdefault('SSE', 'AES256')
+
+        log.info("S3 Tests Go: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
+        log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
 
     def create_users(self):
         """
@@ -224,21 +231,23 @@ class S3tests_go(Task):
                 log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=user, client=client))
                 cluster_name, daemon_type, client_id = teuthology.split_role(client)
                 client_with_id = daemon_type + '.' + client_id
+                args=[
+                    'adjust-ulimits',
+                    'ceph-coverage',
+                    '{tdir}/archive/coverage'.format(tdir=testdir),
+                    'radosgw-admin',
+                    '-n', client_with_id,
+                    'user', 'create',
+                    '--uid', user,
+                    '--display-name', s3tests_conf[section]['display_name'],
+                    '--access-key', s3tests_conf[section]['access_key'],
+                    '--secret', s3tests_conf[section]['access_secret'],
+                    '--email', s3tests_conf[section]['email'],
+                    '--cluster', cluster_name,
+                ]
+                log.info('{args}'.format(args=args))
                 ctx.cluster.run(
-                    args=[
-                        'adjust-ulimits',
-                        'ceph-coverage',
-                        '{tdir}/archive/coverage'.format(tdir=testdir),
-                        'radosgw-admin',
-                        '-n', client_with_id,
-                        'user', 'create',
-                        '--uid', user,
-                        '--display-name', s3tests_conf[section]['display_name'],
-                        '--access-key', s3tests_conf[section]['access_key'],
-                        '--secret', s3tests_conf[section]['access_secret'],
-                        '--email', s3tests_conf[section]['email'],
-                        '--cluster', cluster_name,
-                    ],
+                    args=args,
                     stdout=StringIO()
                 )
             (remote,) = ctx.cluster.only(client).remotes.keys()   
