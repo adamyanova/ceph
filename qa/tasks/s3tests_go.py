@@ -214,7 +214,8 @@ class S3tests_go(Task):
                 for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         users = {'s3main': 'tester', 's3alt': 'johndoe'}
         # s3tests_conf = self.s3tests_skelethon_config()
-        s3tests_conf = teuthology.config_file('/home/adamyanova/src/go_s3tests/config.toml.sample'.format(tdir=testdir))
+        s3tests_conf = teuthology.config_file('/home/adamyanova/src/go_s3tests/config.toml.sample')
+        log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
         for client in all_clients:
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for section, user in users.items():
