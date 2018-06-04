@@ -9,7 +9,7 @@ import base64
 import os
 import random
 import string
-
+import ruamel.yaml
 
 from teuthology import misc as teuthology
 from teuthology.exceptions import ConfigError
@@ -149,8 +149,8 @@ class S3tests_go(Task):
         cluster.run(
                 args=['cp', 
                     # '{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client='client.0'),
-                    '{tdir}/s3-tests/config.toml.sample'.format(tdir=testdir),
-                    '{tdir}/s3-tests/config.toml'.format(tdir=testdir)
+                    '{tdir}/s3-tests/config.yaml.sample'.format(tdir=testdir),
+                    '{tdir}/s3-tests/config.yaml'.format(tdir=testdir)
                 ],
                 stdout=StringIO()
             )
