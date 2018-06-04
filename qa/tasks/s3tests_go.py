@@ -148,8 +148,8 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         cluster.run(
                 args=['cp', 
-                    '{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client='client.0'),
-                    # '{tdir}/s3-tests/config.toml.sample'.format(tdir=testdir),
+                    # '{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client='client.0'),
+                    '{tdir}/s3-tests/config.toml.sample'.format(tdir=testdir),
                     '{tdir}/s3-tests/config.toml'.format(tdir=testdir)
                 ],
                 stdout=StringIO()
@@ -198,10 +198,10 @@ class S3tests_go(Task):
             s3tests_conf[section].setdefault('access_key', ''.join(random.choice(string.ascii_uppercase) for i in range(20)))
             skey = base64.b64encode(os.urandom(40))
             s3tests_conf[section].setdefault('secret_key', '{key}'.format(key=skey))
-        s3tests_conf[section].setdefault('kmskeyid', """barbican_key_id""")
-        s3tests_conf[section].setdefault('bucket', '{bucket}'.format(bucket='bucket1'))
-        s3tests_conf[section].setdefault('region', """{reg}""".format(reg='us-east-1'))
-        s3tests_conf[section].setdefault('SSE', 'AES256')
+        # s3tests_conf[section].setdefault('kmskeyid', """barbican_key_id""")
+        # s3tests_conf[section].setdefault('bucket', '{bucket}'.format(bucket='bucket1'))
+        # s3tests_conf[section].setdefault('region', """{reg}""".format(reg='us-east-1'))
+        # s3tests_conf[section].setdefault('SSE', 'AES256')
 
     def create_users(self):
         """
@@ -212,14 +212,15 @@ class S3tests_go(Task):
         testdir = teuthology.get_testdir(ctx)
         all_clients = ['client.{id}'.format(id=id_)
                 for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        users = {'s3main': 'tester', 's3alt': 'johndoe', 's3tenant' : 'tenanteduser'}
-        s3tests_conf = self.s3tests_skelethon_config()
+        users = {'s3main': 'tester', 's3alt': 'johndoe'}
+        # s3tests_conf = self.s3tests_skelethon_config()
+        s3tests_conf = teuthology.config_file('{tdir}/s3-tests/config.toml.sample'.format(tdir=testdir))
         for client in all_clients:
             # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
             for section, user in users.items():
-                log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
-                self._config_user(s3tests_conf=s3tests_conf[client], section=section, user='{user}.{client}'.format(user=user, client=client))
-                log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg=s3tests_conf))
+                # log.debug('S3 Tests Go: Setion, User = {sect}, {user}'.format(sect=section, user=user))
+                # self._config_user(s3tests_conf=s3tests_conf[client], section=section, user='{user}.{client}'.format(user=user, client=client))
+                # log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg=s3tests_conf))
                 log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=user, client=client))
                 cluster_name, daemon_type, client_id = teuthology.split_role(client)
                 client_with_id = daemon_type + '.' + client_id
@@ -232,10 +233,10 @@ class S3tests_go(Task):
                         '-n', client_with_id,
                         'user', 'create',
                         '--uid', user,
-                        '--display-name', s3tests_conf[client][section]['display_name'],
-                        '--access-key', s3tests_conf[client][section]['access_key'],
-                        '--secret', s3tests_conf[client][section]['secret_key'],
-                        '--email', s3tests_conf[client][section]['email'],
+                        '--display-name', s3tests_conf[section]['display_name'],
+                        '--access-key', s3tests_conf[section]['access_key'],
+                        '--secret', s3tests_conf[section]['secret_key'],
+                        '--email', s3tests_conf[section]['email'],
                         '--cluster', cluster_name,
                     ],
                     stdout=StringIO()
@@ -243,7 +244,7 @@ class S3tests_go(Task):
             (remote,) = ctx.cluster.only(client).remotes.keys()   
             log.debug("S3 Tests Go: remote is {rmt}".format(rmt=remote)) 
             conf_fp = StringIO()
-            s3tests_conf[client].write(conf_fp)
+            s3tests_conf.write(conf_fp)
             teuthology.write_file(
                     remote=remote,
                     path='{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client),
