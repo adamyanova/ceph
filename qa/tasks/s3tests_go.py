@@ -250,15 +250,17 @@ class S3tests_go(Task):
                     args=args,
                     stdout=StringIO()
                 )
-            # (remote,) = ctx.cluster.only(client).remotes.keys()   
-            # log.debug("S3 Tests Go: remote is {rmt}".format(rmt=remote)) 
+
+            (remote,) = ctx.cluster.only(client).remotes.keys()   
+            log.debug("S3 Tests Go: remote is {rmt}".format(rmt=remote)) 
             # conf_fp = StringIO()
             # s3tests_conf.write(conf_fp)
-            # teuthology.write_file(
-            #         remote=remote,
-            #         path='{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client),
-            #         data=conf_fp.getvalue(),
-            #     )
+            s3cfg_list = s3tests_conf.items()
+            teuthology.write_file(
+                    remote=remote,
+                    path='{tdir}/archive/s3-tests.{client}.conf'.format(tdir=testdir, client=client),
+                    data=s3cfg_list.getvalue(),
+                )
 
 
     def delete_users(self):
