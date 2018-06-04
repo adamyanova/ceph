@@ -46,7 +46,7 @@ class S3tests_go(Task):
     def begin(self):
         super(S3tests_go, self).begin()
         log.debug('S3 Tests Go: BEGIN')
-        log.debug('S3 Tests Go: ctx is: {cxt}'.format(ctx=self.ctx))
+        log.debug('S3 Tests Go: ctx is: {ctx}'.format(ctx=self.ctx))
         for (host, roles) in self.ctx.cluster.remotes.iteritems():
             log.info('S3 Tests Go: Cluster config is: {cfg}'.format(cfg = roles))
             log.info('S3 Tests Go: Host is: {host}'.format(host = host))
