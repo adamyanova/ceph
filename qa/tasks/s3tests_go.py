@@ -158,7 +158,7 @@ class S3tests_go(Task):
         """
         log.info("S3 Tests Go: Creating users...")
         testdir = teuthology.get_testdir(self.ctx)
-        s3tests_conf = teuthology.config_file('{tdir}/s3-tests-go/teuth.config.yaml'.format(tdir = testdir))
+        s3tests_conf = teuthology.config_file('s3tests.teuth.config.yaml')
         log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
         for client in self.all_clients:
             self._s3tests_cfg_default_section(client, s3tests_conf)
