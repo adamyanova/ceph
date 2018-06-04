@@ -84,6 +84,8 @@ class S3tests_go(Task):
     def download_test_suite(self):
         log.info("S3 Tests Go: Downloading test suite...")
         testdir = teuthology.get_testdir(self.ctx)
+        branch = None
+        repo = None
         if 's3tests_branch' in  self.ctx.config:
             branch = self.ctx.config['s3tests_branch']
         if 's3tests_repo' in self.ctx.config:
