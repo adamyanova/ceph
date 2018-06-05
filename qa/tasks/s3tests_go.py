@@ -81,6 +81,7 @@ class S3tests_go(Task):
         log.debug('S3 Tests Go: TEARDOWN')
         self.delete_users()
         self.remove_tests()
+        # TODO: add cleanup.sh to remove golang
         
     def download_test_suite(self):
         log.info("S3 Tests Go: Downloading test suite...")
@@ -159,7 +160,8 @@ class S3tests_go(Task):
         """
         log.info("S3 Tests Go: Creating users...")
         testdir = teuthology.get_testdir(self.ctx)
-        s3tests_conf = teuthology.config_file('s3tests.teuth.config.yaml')
+        endpoint = self.ctx.rgw.role_endpoints.get('client.0')
+        s3tests_conf = teuthology.config_file('ubuntu@{host}:{tdir}/s3-tests-go/s3tests.teuth.config.yaml'.format(host = endpoint.hostname, tdir = testdir))
         log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
         for client in self.all_clients:
             self._s3tests_cfg_default_section(client, s3tests_conf)
