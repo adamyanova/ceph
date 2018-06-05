@@ -160,17 +160,17 @@ class S3tests_go(Task):
         """
         log.info("S3 Tests Go: Creating users...")
         testdir = teuthology.get_testdir(self.ctx)
-        endpoint = self.ctx.rgw.role_endpoints.get('client.0')
-        username = getpass.getuser()
-        os.system("scp ubuntu@{host}:{tdir}/s3-tests-go/s3tests.teuth.config.yaml /home/{username}/".format(host = endpoint.hostname, tdir = testdir, username = username))
-        s3tests_conf = teuthology.config_file('/home/{username}/s3tests.teuth.config.yaml'.format(username = username))
-        log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
         for client in self.all_clients:
-            self._s3tests_cfg_default_section(client, s3tests_conf)
+            endpoint = self.ctx.rgw.role_endpoints.get(client)
+            username = getpass.getuser()
+            os.system("scp ubuntu@{host}:{tdir}/s3-tests-go/s3tests.teuth.config.yaml /home/{username}/".format(host = endpoint.hostname, tdir = testdir, username = username))
+            s3tests_conf = teuthology.config_file('/home/{username}/s3tests.teuth.config.yaml'.format(username = username))
+            log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
+            self._s3tests_cfg_default_section(client=client, cfg_dict=s3tests_conf)
             for section, user in self.users.items():
                 # TODO: Check if users with the same credentials can be created in different clients
                 # and what happens in this case
-                self._config_user(s3tests_conf=s3tests_conf, section=section, user=user)
+                self._config_user(s3tests_conf=s3tests_conf, section=section, user=user, client=client)
                 log.debug('S3 Tests Go: Creating user {user} on {client}'.format(user=user, client=client))
                 cluster_name, daemon_type, client_id = teuthology.split_role(client)
                 client_with_id = daemon_type + '.' + client_id
@@ -205,7 +205,7 @@ class S3tests_go(Task):
         cfg_dict['DEFAULT']['port'] = endpoint.port
         cfg_dict['DEFAULT']['is_secure'] = 'yes' if endpoint.cert else 'no'
 
-    def _config_user(self, s3tests_conf, section, user):
+    def _config_user(self, s3tests_conf, section, user, client):
         """
         Generate missing users data this section by stashing away keys, ids, and
         email addresses.
@@ -223,7 +223,7 @@ class S3tests_go(Task):
         self._set_cfg_entry(s3tests_conf[section], 'region', 'us-east-1')
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
-        endpoint = self.ctx.rgw.role_endpoints.get('client.0')
+        endpoint = self.ctx.rgw.role_endpoints.get(client)
         self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(ip = socket.gethostbyname(endpoint.hostname), port = endpoint.port))
         self._set_cfg_entry(s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
