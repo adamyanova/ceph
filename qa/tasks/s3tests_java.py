@@ -71,9 +71,9 @@ class S3tests_java(Task):
                     args = ['cd', 
                         '{tdir}/s3-tests-java'.format(tdir = testdir),
                         run.Raw(';'),
-                        'gradle', 'build', '-x', 'test', 
+                        '/opt/gradle/gradle-4.7/bin/gradle', 'build', '-x', 'test', 
                         run.Raw(';'),
-                        'gradle', 'clean', 'test'
+                        '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test'
                     ],
                     stdout = StringIO()
                 )
@@ -121,10 +121,6 @@ class S3tests_java(Task):
         testdir = teuthology.get_testdir(self.ctx)
         self.ctx.cluster.run(
             args = ['{tdir}/s3-tests-java/bootstrap.sh'.format(tdir=testdir)],
-            stdout = StringIO()
-        )
-        self.ctx.cluster.run(
-            args = ['PATH=/opt/gradle/gradle-4.7/bin:$PATH'],
             stdout = StringIO()
         )
 
