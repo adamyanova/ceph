@@ -70,10 +70,10 @@ class S3tests_java(Task):
             self.ctx.cluster.only(client).run(
                     args = ['cd', 
                         '{tdir}/s3-tests-java'.format(tdir = testdir),
-                        run.Raw(';'),
-                        '/opt/gradle/gradle-4.7/bin/gradle', 'build', '-x', 'test', 
-                        run.Raw(';'),
-                        '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test'
+                        run.Raw('&&'),
+                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', 'build', '-x', 'test', 
+                        run.Raw('&&'),
+                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', 'clean', 'test', 
                     ],
                     stdout = StringIO()
                 )
