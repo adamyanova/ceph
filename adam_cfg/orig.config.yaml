@@ -1,3 +1,4 @@
+
 archive_path: /home/adamyanova/src/teuthology_logs
 email: null
 job_id: '123456'
@@ -23,7 +24,6 @@ overrides:
     fs: xfs
   install:
     ceph:
-#      sha1: dad3b66aac0d802ece7e4504ad61c4ac78f723ff
 #      sha1: bd982ed0780633c6df6188ed3397d674e94d338e
 #      sha1: 4516870a52f5a6f02b47faf9a3c278e157d69f7a
 owner: scheduled_adamyanova@teuthology
@@ -35,14 +35,12 @@ roles:
   - client.0
 branch: master 
 repo: https://github.com/ceph/ceph.git
-#sha1: dad3b66aac0d802ece7e4504ad61c4ac78f723ff
 #sha1: bd982ed0780633c6df6188ed3397d674e94d338e
 #sha1: 4516870a52f5a6f02b47faf9a3c278e157d69f7a
 suite_branch: wip-foo
 suite_path: /home/adamyanova/src/github.com_adamyanova_ceph_wip-foo/qa
-suite_sha1: 630f5867f5432697a4506714499a46ebed231719
 suite_repo: https://github.com/adamyanova/ceph.git
-suite_sha1: 3bf754fab21ef42facca896746a440aa88843c44
+suite_sha1: c4625de8515e164e463ddc7de22ad2fe63b54350
 tasks:
 - install: null
 - ceph:
