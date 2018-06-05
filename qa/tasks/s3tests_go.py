@@ -195,7 +195,7 @@ class S3tests_go(Task):
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         assert endpoint, 'S3 Tests Go: No RGW endpoint for {clt}'.format(clt = client) 
 
-        cfg_dict['DEFAULT']['host'] = '172.21.15.019'
+        cfg_dict['DEFAULT']['host'] = endpoint.hostip
         cfg_dict['DEFAULT']['port'] = 7280
         cfg_dict['DEFAULT']['is_secure'] = 'no' #"yes" if endpoint.cert else "no"
 
