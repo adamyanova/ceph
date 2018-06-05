@@ -123,6 +123,10 @@ class S3tests_java(Task):
             args = ['{tdir}/s3-tests-java/bootstrap.sh'.format(tdir=testdir)],
             stdout = StringIO()
         )
+        self.ctx.cluster.run(
+            args = ['PATH=/opt/gradle/gradle-4.7/bin:$PATH'],
+            stdout = StringIO()
+        )
 
     def create_users(self):
         """
