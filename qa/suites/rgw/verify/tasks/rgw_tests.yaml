@@ -22,6 +22,7 @@ tasks:
 #      rgw_server: client.0
 #      stages: prepare,checki- install: null
 - s3tests_go:
+     client.0:
 overrides:
   ceph:
     conf:
