@@ -11,6 +11,7 @@ import random
 import string
 import yaml
 import socket
+import getpass
 
 from teuthology import misc as teuthology
 from teuthology.exceptions import ConfigError
@@ -161,8 +162,9 @@ class S3tests_go(Task):
         log.info("S3 Tests Go: Creating users...")
         testdir = teuthology.get_testdir(self.ctx)
         endpoint = self.ctx.rgw.role_endpoints.get('client.0')
-        os.system("scp ubuntu@{host}:{tdir}/s3-tests-go/s3tests.teuth.config.yaml /home/teuthworker/".format(host = endpoint.hostname, tdir = testdir))
-        s3tests_conf = teuthology.config_file('/home/teuthworker/s3tests.teuth.config.yaml')
+        username = getpass.getuser()
+        os.system("scp ubuntu@{host}:{tdir}/s3-tests-go/s3tests.teuth.config.yaml /home/{username}/".format(host = endpoint.hostname, tdir = testdir, username = username))
+        s3tests_conf = teuthology.config_file('/home/{username}/s3tests.teuth.config.yaml'.format(username = username))
         log.info("S3 Tests Go: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
         for client in self.all_clients:
             self._s3tests_cfg_default_section(client, s3tests_conf)
@@ -193,7 +195,7 @@ class S3tests_go(Task):
                     stdout = StringIO()
                 )
             self._write_cfg_file(s3tests_conf, client)
-            os.system("rm -rf /home/teuthworker/s3tests.teuth.config.yaml")
+            os.system("rm -rf /home/{username}/s3tests.teuth.config.yaml".format(username = username))
 
     def _s3tests_cfg_default_section(self, client, cfg_dict):
         log.info("S3 Tests Go: Add DEFAULT section")
