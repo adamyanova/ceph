@@ -190,7 +190,7 @@ class S3tests_java(Task):
         self._set_cfg_entry(s3tests_conf[section], 'access_secret', '{sk}'.format(sk=secret))
         self._set_cfg_entry(s3tests_conf[section], 'kmskeyid', 'barbican_key_id')
         self._set_cfg_entry(s3tests_conf[section], 'SSE', 'AES256')
-        self._set_cfg_entry(s3tests_conf[section], 'region', 'us-east-1')
+        self._set_cfg_entry(s3tests_conf[section], 'region', 'mexico')
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
         endpoint = self.ctx.rgw.role_endpoints.get('client.0')
