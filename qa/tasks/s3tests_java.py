@@ -172,7 +172,7 @@ class S3tests_java(Task):
         self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(ip = socket.gethostbyname(endpoint.hostname), port = endpoint.port))
         self._set_cfg_entry(s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
-        self._set_cfg_entry(s3tests_conf[section], 'is_secure', 'yes' #"yes" if endpoint.cert else "no")
+        self._set_cfg_entry(s3tests_conf[section], 'is_secure', 'yes') #"yes" if endpoint.cert else "no")
 
 
         log.info("S3 Tests Java: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
