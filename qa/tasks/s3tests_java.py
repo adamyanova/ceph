@@ -149,7 +149,7 @@ class S3tests_java(Task):
 
         cfg_dict['DEFAULT']['host'] = socket.gethostbyname(endpoint.hostname)
         cfg_dict['DEFAULT']['port'] = endpoint.port
-        # cfg_dict['DEFAULT']['is_secure'] = 'yes' #if endpoint.cert else 'no'
+        cfg_dict['DEFAULT']['is_secure'] = 'true' if endpoint.cert else 'false'
 
     def _config_user(self, s3tests_conf, section, user, client):
         """
@@ -169,10 +169,10 @@ class S3tests_java(Task):
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
         endpoint = self.ctx.rgw.role_endpoints.get(client)
-        self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(ip = socket.gethostbyname(endpoint.hostname), port = endpoint.port))
+        self._set_cfg_entry(s3tests_conf[section], 'endpoint', 'http://{ip}:{port}'.format(ip = socket.gethostbyname(endpoint.hostname), port = endpoint.port))
         self._set_cfg_entry(s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
-        # self._set_cfg_entry(s3tests_conf[section], 'is_secure', true if endpoint.cert else false)
+        self._set_cfg_entry(s3tests_conf[section], 'is_secure', 'true' if endpoint.cert else 'false')
 
 
         log.info("S3 Tests Java: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
