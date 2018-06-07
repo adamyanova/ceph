@@ -99,38 +99,6 @@ class S3tests_java(Task):
             args = ['{tdir}/s3-tests-java/bootstrap.sh'.format(tdir=testdir)],
             stdout = StringIO()
         )
-        self._setup_golang(client)
-        self._install_tests_utils(client)
-    
-    def _setup_golang(self, client):
-        log.info("S3 Tests Java: Setting up golang...")
-        self.ctx.cluster.only(client).run(
-            args = ['mkdir', 
-                self.gopath,
-                run.Raw('&&'),
-                'GOPATH={path}'.format(path = self.gopath)
-            ],
-            stdout = StringIO()
-            )
-
-    def _install_tests_utils(self, client):
-        log.info("S3 Tests Java: Installing tests dependencies...")
-        testdir = teuthology.get_testdir(self.ctx)
-        # explicit download of stretchr/testify is required
-        self.ctx.cluster.only(client).run(
-                args = ['cd', 
-                    '{tdir}/s3-tests-java'.format(tdir = testdir),
-                    run.Raw(';'),
-                    'go', 'get', '-v', '-d', './...',
-                    run.Raw(';'),
-                    'go', 'get', '-v', 'github.com/stretchr/testify',
-                ],
-                stdout = StringIO()
-            )
-        # self.ctx.cluster.only(client).run(
-        #         args = ['ls', '/home/ubuntu/go/src/github.com/'],
-        #         stdout = StringIO()
-        #     )
 
     def create_users(self):
         """
