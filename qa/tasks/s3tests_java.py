@@ -217,10 +217,10 @@ class S3tests_java(Task):
                     args = ['cd', 
                         '{tdir}/s3-tests-java'.format(tdir = testdir),
                         run.Raw('&&'),
-                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', '-s', '--rerun-tasks', 
+                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', '-S', '--rerun-tasks', 
                         'build', '-x', 'test', 
                         run.Raw('&&'),
-                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', 'test', 
+                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', '-S', 'test', 
                     ],
                     stdout = StringIO()
                 )
