@@ -20,6 +20,7 @@ from teuthology.orchestra.remote import Remote
 
 log = logging.getLogger(__name__)
 
+
 class S3tests_java(Task):
     """
     Download and install S3TestsGo
@@ -32,9 +33,9 @@ class S3tests_java(Task):
         log.debug('S3 Tests Java: __INIT__ ')
         assert hasattr(ctx, 'rgw'), 'S3tests_java must run after the rgw task'
         clients = ['client.{id}'.format(id=id_)
-                for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
+                   for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         self.all_clients = [clients[0]]
-        self.users = {'s3main': 'tester', 's3alt': 'johndoe'}
+        self.users = {'s3main': 'tester', 's3alt': 'johndoe', 'tenanted' : 'tenant'}
         self.gopath = '/home/ubuntu/go'
 
     def setup(self):
@@ -49,8 +50,9 @@ class S3tests_java(Task):
         log.debug('S3 Tests Java: BEGIN')
         log.debug('S3 Tests Java: ctx is: {ctx}'.format(ctx=self.ctx))
         for (host, roles) in self.ctx.cluster.remotes.iteritems():
-            log.info('S3 Tests Java: Cluster config is: {cfg}'.format(cfg = roles))
-            log.info('S3 Tests Java: Host is: {host}'.format(host = host))
+            log.info(
+                'S3 Tests Java: Cluster config is: {cfg}'.format(cfg=roles))
+            log.info('S3 Tests Java: Host is: {host}'.format(host=host))
         self.create_users()
         self.run_tests()
 
@@ -60,13 +62,13 @@ class S3tests_java(Task):
         for client in self.all_clients:
             self.remove_tests(client)
             self.delete_users(client)
-        
+
     def download_test_suite(self, client):
         log.info("S3 Tests Java: Downloading test suite...")
         testdir = teuthology.get_testdir(self.ctx)
         branch = None
         repo = None
-        if 's3tests_branch' in  self.ctx.config:
+        if 's3tests_branch' in self.ctx.config:
             branch = self.ctx.config['s3tests_branch']
         if 's3tests_repo' in self.ctx.config:
             repo = self.ctx.config['s3tests_repo']
@@ -75,29 +77,21 @@ class S3tests_java(Task):
         if repo is None:
             repo = 'https://github.com/adamyanova/java_s3tests.git'
         self.ctx.cluster.only(client).run(
-            args = [
+            args=[
                 'git', 'clone',
                 '-b', branch,
                 repo,
                 '{tdir}/s3-tests-java'.format(tdir=testdir),
             ],
-            stdout = StringIO()
-            )
-        # self.ctx.cluster.only(client).run(
-        #     args = ['echo', '{tdir}/s3-tests-java'.format(tdir=testdir)],
-        #     stdout = StringIO()
-        # )
-        # self.ctx.cluster.only(client).run(
-        #     args = ['ls','{tdir}/s3-tests-java'.format(tdir=testdir)], 
-        #     stdout = StringIO()
-        #     )
+            stdout=StringIO()
+        )
 
     def install_required_packages(self, client):
         log.info("S3 Tests Java: Installing required packages...")
         testdir = teuthology.get_testdir(self.ctx)
         self.ctx.cluster.only(client).run(
-            args = ['{tdir}/s3-tests-java/bootstrap.sh'.format(tdir=testdir)],
-            stdout = StringIO()
+            args=['{tdir}/s3-tests-java/bootstrap.sh'.format(tdir=testdir)],
+            stdout=StringIO()
         )
 
     def create_users(self):
@@ -109,43 +103,50 @@ class S3tests_java(Task):
         for client in self.all_clients:
             endpoint = self.ctx.rgw.role_endpoints.get(client)
             username = getpass.getuser()
-            os.system("scp ubuntu@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(host = endpoint.hostname, tdir = testdir, username = username))
-            s3tests_conf = teuthology.config_file('/home/{username}/s3tests.teuth.config.yaml'.format(username = username))
-            log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(s3cfg = s3tests_conf))
-            self._s3tests_cfg_default_section(client = client, cfg_dict = s3tests_conf)
+            os.system("scp ubuntu@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
+                host=endpoint.hostname, tdir=testdir, username=username))
+            s3tests_conf = teuthology.config_file(
+                '/home/{username}/s3tests.teuth.config.yaml'.format(username=username))
+            log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(s3cfg=s3tests_conf))
+            self._s3tests_cfg_default_section(client=client, cfg_dict=s3tests_conf)
             for section, user in self.users.items():
-                userid = '{user}.{client}'.format(user = user, client = client)
-
-                log.debug('S3 Tests Java: Creating user {userid}'.format(userid = userid))
-                self._config_user(s3tests_conf = s3tests_conf, section = section, user = userid, client = client)
-                cluster_name, daemon_type, client_id = teuthology.split_role(client)
-                client_with_id = daemon_type + '.' + client_id
-                args = [
-                    'adjust-ulimits',
-                    'ceph-coverage',
-                    '{tdir}/archive/coverage'.format(tdir=testdir),
-                    'radosgw-admin',
-                    '-n', client_with_id,
-                    'user', 'create',
-                    '--uid', s3tests_conf[section]['user_id'],
-                    '--display-name', s3tests_conf[section]['display_name'],
-                    '--access-key', s3tests_conf[section]['access_key'],
-                    '--secret', s3tests_conf[section]['access_secret'],
-                    '--email', s3tests_conf[section]['email'],
-                    '--cluster', cluster_name,
-                ]
-                log.info('{args}'.format(args=args))
-                self.ctx.cluster.only(client).run(
-                    args = args,
-                    stdout = StringIO()
-                )
+                if section in s3tests_conf :
+                    userid = '{user}.{client}'.format(user=user, client=client)
+                    log.debug('S3 Tests Java: Creating user {userid}'.format(userid=userid))
+                    self._config_user(s3tests_conf=s3tests_conf,
+                                      section=section, user=userid, client=client)
+                    cluster_name, daemon_type, client_id = teuthology.split_role(client)
+                    client_with_id = daemon_type + '.' + client_id
+                    args = [
+                        'adjust-ulimits',
+                        'ceph-coverage',
+                        '{tdir}/archive/coverage'.format(tdir=testdir),
+                        'radosgw-admin',
+                        '-n', client_with_id,
+                        'user', 'create',
+                        '--uid', s3tests_conf[section]['user_id'],
+                        '--display-name', s3tests_conf[section]['display_name'],
+                        '--access-key', s3tests_conf[section]['access_key'],
+                        '--secret', s3tests_conf[section]['access_secret'],
+                        '--email', s3tests_conf[section]['email'],
+                        '--cluster', cluster_name,
+                    ]
+                    log.info('{args}'.format(args=args))
+                    self.ctx.cluster.only(client).run(
+                        args=args,
+                        stdout=StringIO()
+                    )
+                else :
+                    self.users.pop(section)
             self._write_cfg_file(s3tests_conf, client)
-            os.system("rm -rf /home/{username}/s3tests.teuth.config.yaml".format(username = username))
+            os.system(
+                "rm -rf /home/{username}/s3tests.teuth.config.yaml".format(username=username))
 
     def _s3tests_cfg_default_section(self, client, cfg_dict):
         log.info("S3 Tests Java: Add DEFAULT section")
         endpoint = self.ctx.rgw.role_endpoints.get(client)
-        assert endpoint, 'S3 Tests Java: No RGW endpoint for {clt}'.format(clt = client) 
+        assert endpoint, 'S3 Tests Java: No RGW endpoint for {clt}'.format(
+            clt=client)
 
         cfg_dict['DEFAULT']['host'] = socket.gethostbyname(endpoint.hostname)
         cfg_dict['DEFAULT']['port'] = endpoint.port
@@ -156,10 +157,12 @@ class S3tests_java(Task):
         Generate missing users data for this section by stashing away keys, ids, and
         email addresses.
         """
+
         self._set_cfg_entry(s3tests_conf[section], 'user_id', '{user}'.format(user=user))
         self._set_cfg_entry(s3tests_conf[section], 'email', '{user}_test@test.test'.format(user=user))
-        self._set_cfg_entry(s3tests_conf[section], 'display_name', 'Ms. {user}'.format(user = user))
-        access_key = ''.join(random.choice(string.ascii_uppercase) for i in range(20))
+        self._set_cfg_entry(s3tests_conf[section], 'display_name', 'Ms. {user}'.format(user=user))
+        access_key = ''.join(random.choice(string.ascii_uppercase)
+                             for i in range(20))
         secret = base64.b64encode(os.urandom(40))
         self._set_cfg_entry(s3tests_conf[section], 'access_key', '{ak}'.format(ak=access_key))
         self._set_cfg_entry(s3tests_conf[section], 'access_secret', '{sk}'.format(sk=secret))
@@ -169,20 +172,23 @@ class S3tests_java(Task):
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
         endpoint = self.ctx.rgw.role_endpoints.get(client)
-        self._set_cfg_entry(s3tests_conf[section], 'endpoint', 'http://{ip}:{port}'.format(ip = socket.gethostbyname(endpoint.hostname), port = endpoint.port))
-        self._set_cfg_entry(s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
+        self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(
+            ip=socket.gethostbyname(endpoint.hostname), port=endpoint.port))
+        self._set_cfg_entry(
+            s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
         self._set_cfg_entry(s3tests_conf[section], 'is_secure', 'true' if endpoint.cert else 'false')
 
-
-        log.info("S3 Tests Java: s3tests_conf[{sect}] is {s3cfg}".format(sect=section, s3cfg = s3tests_conf[section]))
-        log.debug('S3 Tests Java: Setion, User = {sect}, {user}'.format(sect=section, user=user))
+        log.info("S3 Tests Java: s3tests_conf[{sect}] is {s3cfg}".format(
+            sect=section, s3cfg=s3tests_conf[section]))
+        log.debug('S3 Tests Java: Setion, User = {sect}, {user}'.format(
+            sect=section, user=user))
 
     def _write_cfg_file(self, cfg_dict, client):
         testdir = teuthology.get_testdir(self.ctx)
-        (remote,) = self.ctx.cluster.only(client).remotes.keys()   
+        (remote,) = self.ctx.cluster.only(client).remotes.keys()
         with open('tmp.yaml', 'w') as outfile:
-            yaml.dump(cfg_dict, outfile, default_flow_style = False)
+            yaml.dump(cfg_dict, outfile, default_flow_style=False)
 
         conf_fp = StringIO()
         with open('tmp.yaml', 'r') as infile:
@@ -190,10 +196,11 @@ class S3tests_java(Task):
                 conf_fp.write(line)
 
         teuthology.write_file(
-                remote = remote,
-                path = '{tdir}/archive/s3-tests-java.{client}.conf'.format(tdir = testdir, client = client),
-                data = conf_fp.getvalue(),
-            )
+            remote=remote,
+            path='{tdir}/archive/s3-tests-java.{client}.conf'.format(
+                tdir=testdir, client=client),
+            data=conf_fp.getvalue(),
+        )
         os.remove('tmp.yaml')
 
     def _set_cfg_entry(self, cfg_dict, key, value):
@@ -207,44 +214,46 @@ class S3tests_java(Task):
         testdir = teuthology.get_testdir(self.ctx)
         for client in self.all_clients:
             self.ctx.cluster.only(client).run(
-                    args = ['cp', 
-                        '{tdir}/archive/s3-tests-java.{client}.conf'.format(tdir = testdir, client = client),
-                        '{tdir}/s3-tests-java/config.properties'.format(tdir = testdir)
-                    ],
-                    stdout = StringIO()
-                )
+                args=['cp',
+                      '{tdir}/archive/s3-tests-java.{client}.conf'.format(
+                          tdir=testdir, client=client),
+                      '{tdir}/s3-tests-java/config.properties'.format(
+                          tdir=testdir)
+                      ],
+                stdout=StringIO()
+            )
             self.ctx.cluster.only(client).run(
-                    args = ['cd', 
-                        '{tdir}/s3-tests-java'.format(tdir = testdir),
-                        run.Raw('&&'),
-                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', '-S', '--rerun-tasks', 
-                        'build', '-x', 'test', 
-                        run.Raw('&&'),
-                        '/opt/gradle/gradle-4.7/bin/gradle', '-i', '-S', 'test', 
-                    ],
-                    stdout = StringIO()
-                )
+                args=['cd',
+                      '{tdir}/s3-tests-java'.format(tdir=testdir),
+                      run.Raw('&&'),
+                      '/opt/gradle/gradle-4.7/bin/gradle', '-i', '-S', '--rerun-tasks',
+                      'build', '-x', 'test',
+                      run.Raw('&&'),
+                      '/opt/gradle/gradle-4.7/bin/gradle', '-i', '-S', 'test',
+                      ],
+                stdout=StringIO()
+            )
 
     def remove_tests(self, client):
         log.info('S3 Tests Java: Removing s3-tests-java...')
         testdir = teuthology.get_testdir(self.ctx)
         self.ctx.cluster.only(client).run(
-            args = [
+            args=[
                 'rm',
                 '-rf',
-                '{tdir}/s3-tests-java'.format(tdir = testdir),
-                '{gopath}'.format(gopath = self.gopath)
+                '{tdir}/s3-tests-java'.format(tdir=testdir),
+                '{gopath}'.format(gopath=self.gopath)
             ],
-            stdout = StringIO()
-            )
+            stdout=StringIO()
+        )
 
     def delete_users(self, client):
         log.info("S3 Tests Java: Deleting users...")
-        testdir = teuthology.get_testdir(self.ctx)      
+        testdir = teuthology.get_testdir(self.ctx)
         for section, user in self.users.items():
-            userid = '{user}.{client}'.format(user = user, client = client)
+            userid = '{user}.{client}'.format(user=user, client=client)
             self.ctx.cluster.only(client).run(
-                args = [
+                args=[
                     'adjust-ulimits',
                     'ceph-coverage',
                     '{tdir}/archive/coverage'.format(tdir=testdir),
@@ -255,7 +264,8 @@ class S3tests_java(Task):
                     '--purge-data',
                     '--cluster', 'ceph',
                 ],
-                    stdout = StringIO()
-                )
+                stdout=StringIO()
+            )
+
 
 task = S3tests_java
