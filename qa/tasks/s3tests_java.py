@@ -95,7 +95,12 @@ class S3tests_java(Task):
         username = getpass.getuser()
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         self.ctx.cluster.only(client).run(
-            args=['sudo keytool -import -alias {alias} -keystore /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts -file /home/ubuntu/cephtest/ca/rgw.{client}.crt  -storepass "changeit"'.format(alias = endpoint.hostname, client = client)
+            args=['sudo',
+            'keytool',
+            '-import', '-alias', '{alias}'.format(alias = endpoint.hostname),
+            '-keystore', '/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts',
+            '-file', '/home/ubuntu/cephtest/ca/rgw.{client}.crt'.format(client = client), 
+            '-storepass', 'changeit',
             ],
              stdout=StringIO()
         )
