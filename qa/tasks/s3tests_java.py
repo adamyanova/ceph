@@ -36,7 +36,6 @@ class S3tests_java(Task):
                    for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         self.all_clients = [clients[0]]
         self.users = {'s3main': 'tester', 's3alt': 'johndoe', 'tenanted' : 'tenant'}
-        self.gopath = '/home/ubuntu/go'
 
     def setup(self):
         super(S3tests_java, self).setup()
@@ -93,6 +92,16 @@ class S3tests_java(Task):
             args=['{tdir}/s3-tests-java/bootstrap.sh'.format(tdir=testdir)],
             stdout=StringIO()
         )
+        username = getpass.getuser()
+        self.ctx.cluster.only(client).run(
+            args=['sudo', 'keytool -import -alias {alias}', 
+            ' -keystore /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts',
+            '-file /home/{username}/cephtest/ca/rgw.{client}.crt'.format(username = username, client = client),
+            '-storepass "changeit"'
+            ],
+             stdout=StringIO()
+        )
+
 
     def create_users(self):
         """
@@ -242,7 +251,6 @@ class S3tests_java(Task):
                 'rm',
                 '-rf',
                 '{tdir}/s3-tests-java'.format(tdir=testdir),
-                '{gopath}'.format(gopath=self.gopath)
             ],
             stdout=StringIO()
         )
