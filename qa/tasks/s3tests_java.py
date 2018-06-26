@@ -161,7 +161,11 @@ class S3tests_java(Task):
 
         cfg_dict['DEFAULT']['host'] = socket.gethostbyname(endpoint.hostname)
         cfg_dict['DEFAULT']['port'] = endpoint.port
-        cfg_dict['DEFAULT']['is_secure'] = 'true' if endpoint.cert else 'false'
+        bool secure = False
+        if endpoint.cert :
+            secure = True
+
+        cfg_dict['DEFAULT']['is_secure'] = secure
 
     def _config_user(self, s3tests_conf, section, user, client):
         """
@@ -240,6 +244,8 @@ class S3tests_java(Task):
                       '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
                       '-S', '--console', 'verbose', '--rerun-tasks', '--no-build-cache', 
                       '--tests', 'ObjectTest.testEncryptionKeySSECNoKey',
+                      run.Raw('>>'),
+                      'log.txt'
                       ],
                 stdout=StringIO()
             )
