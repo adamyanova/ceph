@@ -11,6 +11,7 @@ overrides:
   rgw:
     client.0:
       ssl certificate: rgw.client.0
+debug: true
 tasks:
 - local_cluster:
     cluster_path: /home/mu3e/ceph/build
