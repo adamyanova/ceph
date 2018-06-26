@@ -112,7 +112,7 @@ class S3tests_java(Task):
             args=['sudo',
                   'keytool',
                   '-import', '-alias', '{alias}'.format(
-                      alias='teuthology'),
+                      alias=endpoint.hostname),
                   '-keystore', '/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts',
                   '-file', '/home/ubuntu/cephtest/ca/rgw.{client}.crt'.format(
                       client=client),
@@ -139,8 +139,8 @@ class S3tests_java(Task):
                 '/home/{local}/s3tests.teuth.config.yaml'.format(local=local_user))
             log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(
                 s3cfg=s3tests_conf))
-            self._s3tests_cfg_default_section(
-                client=client, cfg_dict=s3tests_conf)
+            # self._s3tests_cfg_default_section(
+            #     client=client, cfg_dict=s3tests_conf)
             for section, user in self.users.items():
                 if section in s3tests_conf:
                     userid = '{user}.{client}'.format(user=user, client=client)

@@ -138,8 +138,8 @@ class S3tests_java(Task):
                 '/home/{username}/s3tests.teuth.config.yaml'.format(username=username))
             log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(
                 s3cfg=s3tests_conf))
-            self._s3tests_cfg_default_section(
-                client=client, cfg_dict=s3tests_conf)
+            # self._s3tests_cfg_default_section(
+            #     client=client, cfg_dict=s3tests_conf)
             for section, user in self.users.items():
                 if section in s3tests_conf:
                     userid = '{user}.{client}'.format(user=user, client=client)
@@ -267,8 +267,8 @@ class S3tests_java(Task):
                       '{tdir}/s3-tests-java'.format(tdir=testdir),
                       run.Raw('&&'),
                       '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
-                      '-S', '--console', 'verbose', '--rerun-tasks', '--no-build-cache',
-                      '--tests', 'ObjectTest.testEncryptionKeySSECNoKey', '--debug',
+                      '-S', '--console', 'verbose', '--no-build-cache',
+                      '--tests', 'ObjectTest.testEncryptionKeySSECNoKey',
                       run.Raw('>>'),
                       'log.txt'
                       ],

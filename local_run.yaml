@@ -8,9 +8,9 @@ overrides:
           rgw crypt s3 kms encryption keys: testkey-1=YmluCmJvb3N0CmJvb3N0LWJ1aWxkCmNlcGguY29uZgo=
               testkey-2=aWIKTWFrZWZpbGUKbWFuCm91dApzcmMKVGVzdGluZwo=
           rgw lc debug interval: 10
-  rgw:
-    client.0:
-      ssl certificate: rgw.client.0
+#   rgw:
+#     client.0:
+#       ssl certificate: rgw.client.0
 debug: true
 tasks:
 - local_cluster:
