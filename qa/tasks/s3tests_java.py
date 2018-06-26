@@ -129,9 +129,10 @@ class S3tests_java(Task):
         testdir = teuthology.get_testdir(self.ctx)
         for client in self.all_clients:
             endpoint = self.ctx.rgw.role_endpoints.get(client)
-            username = getpass.getuser()
+            username = teuthology.get_test_user()
             log.info("S3 Tests Java: username is: {username}".format(
                 username=username))
+            username = 'ubuntu'
             os.system("scp {username}@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
                 host=endpoint.hostname, tdir=testdir, username=username))
             s3tests_conf = teuthology.config_file(
