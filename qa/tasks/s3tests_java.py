@@ -35,7 +35,8 @@ class S3tests_java(Task):
         clients = ['client.{id}'.format(id=id_)
                    for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         self.all_clients = [clients[0]]
-        self.users = {'s3main': 'tester', 's3alt': 'johndoe', 'tenanted' : 'tenant'}
+        self.users = {'s3main': 'tester',
+                      's3alt': 'johndoe', 'tenanted': 'tenant'}
 
     def setup(self):
         super(S3tests_java, self).setup()
@@ -84,6 +85,13 @@ class S3tests_java(Task):
             ],
             stdout=StringIO()
         )
+        if 'debug' in self.ctx.config:
+            self.ctx.cluster.only(client).run(
+                args=['cp',
+                      '{tdir}/s3-tests-java/log4j.properties'.format(tdir=testdir),
+                      '{tdir}/s3-tests-java/src/main/resources/'.format(tdir=testdir)
+                      ]
+            )
 
     def install_required_packages(self, client):
         log.info("S3 Tests Java: Installing required packages...")
@@ -96,13 +104,15 @@ class S3tests_java(Task):
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         self.ctx.cluster.only(client).run(
             args=['sudo',
-            'keytool',
-            '-import', '-alias', '{alias}'.format(alias = endpoint.hostname),
-            '-keystore', '/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts',
-            '-file', '/home/ubuntu/cephtest/ca/rgw.{client}.crt'.format(client = client), 
-            '-storepass', 'changeit',
-            ],
-             stdout=StringIO()
+                  'keytool',
+                  '-import', '-alias', '{alias}'.format(
+                      alias=endpoint.hostname),
+                  '-keystore', '/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts',
+                  '-file', '/home/ubuntu/cephtest/ca/rgw.{client}.crt'.format(
+                      client=client),
+                  '-storepass', 'changeit',
+                  ],
+            stdout=StringIO()
         )
 
     def create_users(self):
@@ -114,19 +124,25 @@ class S3tests_java(Task):
         for client in self.all_clients:
             endpoint = self.ctx.rgw.role_endpoints.get(client)
             username = getpass.getuser()
-            os.system("scp ubuntu@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
+            log.info("S3 Tests Java: username is: {username}".format(
+                username=username))
+            os.system("scp {username}@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
                 host=endpoint.hostname, tdir=testdir, username=username))
             s3tests_conf = teuthology.config_file(
                 '/home/{username}/s3tests.teuth.config.yaml'.format(username=username))
-            log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(s3cfg=s3tests_conf))
-            self._s3tests_cfg_default_section(client=client, cfg_dict=s3tests_conf)
+            log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(
+                s3cfg=s3tests_conf))
+            self._s3tests_cfg_default_section(
+                client=client, cfg_dict=s3tests_conf)
             for section, user in self.users.items():
-                if section in s3tests_conf :
+                if section in s3tests_conf:
                     userid = '{user}.{client}'.format(user=user, client=client)
-                    log.debug('S3 Tests Java: Creating user {userid}'.format(userid=userid))
+                    log.debug(
+                        'S3 Tests Java: Creating user {userid}'.format(userid=userid))
                     self._config_user(s3tests_conf=s3tests_conf,
                                       section=section, user=userid, client=client)
-                    cluster_name, daemon_type, client_id = teuthology.split_role(client)
+                    cluster_name, daemon_type, client_id = teuthology.split_role(
+                        client)
                     client_with_id = daemon_type + '.' + client_id
                     args = [
                         'adjust-ulimits',
@@ -147,7 +163,7 @@ class S3tests_java(Task):
                         args=args,
                         stdout=StringIO()
                     )
-                else :
+                else:
                     self.users.pop(section)
             self._write_cfg_file(s3tests_conf, client)
             os.system(
@@ -161,11 +177,7 @@ class S3tests_java(Task):
 
         cfg_dict['DEFAULT']['host'] = socket.gethostbyname(endpoint.hostname)
         cfg_dict['DEFAULT']['port'] = endpoint.port
-        bool secure = False
-        if endpoint.cert :
-            secure = True
-
-        cfg_dict['DEFAULT']['is_secure'] = secure
+        cfg_dict['DEFAULT']['is_secure'] = True if endpoint.cert else False
 
     def _config_user(self, s3tests_conf, section, user, client):
         """
@@ -173,15 +185,21 @@ class S3tests_java(Task):
         email addresses.
         """
 
-        self._set_cfg_entry(s3tests_conf[section], 'user_id', '{user}'.format(user=user))
-        self._set_cfg_entry(s3tests_conf[section], 'email', '{user}_test@test.test'.format(user=user))
-        self._set_cfg_entry(s3tests_conf[section], 'display_name', 'Ms. {user}'.format(user=user))
+        self._set_cfg_entry(
+            s3tests_conf[section], 'user_id', '{user}'.format(user=user))
+        self._set_cfg_entry(
+            s3tests_conf[section], 'email', '{user}_test@test.test'.format(user=user))
+        self._set_cfg_entry(
+            s3tests_conf[section], 'display_name', 'Ms. {user}'.format(user=user))
         access_key = ''.join(random.choice(string.ascii_uppercase)
                              for i in range(20))
         secret = base64.b64encode(os.urandom(40))
-        self._set_cfg_entry(s3tests_conf[section], 'access_key', '{ak}'.format(ak=access_key))
-        self._set_cfg_entry(s3tests_conf[section], 'access_secret', '{sk}'.format(sk=secret))
-        self._set_cfg_entry(s3tests_conf[section], 'kmskeyid', 'barbican_key_id')
+        self._set_cfg_entry(
+            s3tests_conf[section], 'access_key', '{ak}'.format(ak=access_key))
+        self._set_cfg_entry(
+            s3tests_conf[section], 'access_secret', '{sk}'.format(sk=secret))
+        self._set_cfg_entry(
+            s3tests_conf[section], 'kmskeyid', 'barbican_key_id')
         self._set_cfg_entry(s3tests_conf[section], 'SSE', 'AES256')
         self._set_cfg_entry(s3tests_conf[section], 'region', 'mexico')
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
@@ -192,7 +210,8 @@ class S3tests_java(Task):
         self._set_cfg_entry(
             s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
-        self._set_cfg_entry(s3tests_conf[section], 'is_secure', 'true' if endpoint.cert else 'false')
+        self._set_cfg_entry(
+            s3tests_conf[section], 'is_secure', True if endpoint.cert else False)
 
         log.info("S3 Tests Java: s3tests_conf[{sect}] is {s3cfg}".format(
             sect=section, s3cfg=s3tests_conf[section]))
@@ -242,7 +261,7 @@ class S3tests_java(Task):
                       '{tdir}/s3-tests-java'.format(tdir=testdir),
                       run.Raw('&&'),
                       '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
-                      '-S', '--console', 'verbose', '--rerun-tasks', '--no-build-cache', 
+                      '-S', '--console', 'verbose', '--rerun-tasks', '--no-build-cache',
                       '--tests', 'ObjectTest.testEncryptionKeySSECNoKey',
                       run.Raw('>>'),
                       'log.txt'

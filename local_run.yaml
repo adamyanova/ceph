@@ -1,0 +1,11 @@
+tasks:
+- local_cluster:
+    cluster_path: /home/mu3e/ceph/build
+- local_rgw:
+    client.0:
+- s3tests_java:
+    client.0:
+      force-branch: ceph-master
+      scan_for_encryption_keys: false
+      #extra_args: ['s3tests_boto3.functional.test_s3:test_bucket_list_delimiter_prefix']
+
