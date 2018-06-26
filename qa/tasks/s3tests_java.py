@@ -129,14 +129,14 @@ class S3tests_java(Task):
         testdir = teuthology.get_testdir(self.ctx)
         for client in self.all_clients:
             endpoint = self.ctx.rgw.role_endpoints.get(client)
-            username = teuthology.get_test_user()
-            log.info("S3 Tests Java: username is: {username}".format(
-                username=username))
-            username = 'ubuntu'
-            os.system("scp {username}@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
-                host=endpoint.hostname, tdir=testdir, username=username))
+            local_user = getpass.getuser()
+            remote_user = teuthology.get_test_user()
+            log.info("S3 Tests Java: local use is: {username}".format(
+                username=local_user))
+            os.system("scp {remote}@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{local}/".format(
+                host=endpoint.hostname, tdir=testdir, remote=remote_user, local=local_user))
             s3tests_conf = teuthology.config_file(
-                '/home/{username}/s3tests.teuth.config.yaml'.format(username=username))
+                '/home/{local}/s3tests.teuth.config.yaml'.format(local=local_user))
             log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(
                 s3cfg=s3tests_conf))
             self._s3tests_cfg_default_section(
@@ -174,7 +174,7 @@ class S3tests_java(Task):
                     self.users.pop(section)
             self._write_cfg_file(s3tests_conf, client)
             os.system(
-                "rm -rf /home/{username}/s3tests.teuth.config.yaml".format(username=username))
+                "rm -rf /home/{local}/s3tests.teuth.config.yaml".format(local=local_user))
 
     def _s3tests_cfg_default_section(self, client, cfg_dict):
         log.info("S3 Tests Java: Add DEFAULT section")

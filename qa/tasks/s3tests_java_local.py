@@ -132,7 +132,7 @@ class S3tests_java(Task):
             username = getpass.getuser()
             log.info("S3 Tests Java: username is: {username}".format(
                 username=username))
-            os.system("scp {username}@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
+            os.system("scp {username}@{host}:{tdir}s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
                 host=endpoint.hostname, tdir=testdir, username=username))
             s3tests_conf = teuthology.config_file(
                 '/home/{username}/s3tests.teuth.config.yaml'.format(username=username))
