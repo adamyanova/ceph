@@ -269,7 +269,7 @@ class S3tests_java(Task):
                       run.Raw('&&'),
                       '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
                       '-S', '--console', 'verbose', '--rerun-tasks', '--no-build-cache',
-                      '--tests', 'ObjectTest.testEncryptionKeySSECNoKey', '--debug',
+                      '--tests', 'ObjectTest.testEncryptionKeySSECNoKey',
                       run.Raw('>>'),
                       'log.txt'
                       ],

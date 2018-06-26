@@ -21,17 +21,17 @@ from teuthology.orchestra.remote import Remote
 log = logging.getLogger(__name__)
 
 
-class S3tests_java(Task):
+class S3tests_java_local(Task):
     """
     Download and install S3TestsGo
     This will require golang
     """
 
     def __init__(self, ctx, config):
-        super(S3tests_java, self).__init__(ctx, config)
+        super(S3tests_java_local, self).__init__(ctx, config)
         self.log = log
         log.debug('S3 Tests Java: __INIT__ ')
-        assert hasattr(ctx, 'rgw'), 'S3tests_java must run after the rgw task'
+        assert hasattr(ctx, 'rgw'), 'S3tests_java_local must run after the rgw task'
         clients = ['client.{id}'.format(id=id_)
                    for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         self.all_clients = [clients[0]]
@@ -39,14 +39,14 @@ class S3tests_java(Task):
                       's3alt': 'johndoe', 'tenanted': 'tenant'}
 
     def setup(self):
-        super(S3tests_java, self).setup()
+        super(S3tests_java_local, self).setup()
         log.debug('S3 Tests Java: SETUP')
         for client in self.all_clients:
             self.download_test_suite(client)
             self.install_required_packages(client)
 
     def begin(self):
-        super(S3tests_java, self).begin()
+        super(S3tests_java_local, self).begin()
         log.debug('S3 Tests Java: BEGIN')
         log.debug('S3 Tests Java: ctx is: {ctx}'.format(ctx=self.ctx))
         for (host, roles) in self.ctx.cluster.remotes.iteritems():
@@ -57,7 +57,7 @@ class S3tests_java(Task):
         self.run_tests()
 
     def teardown(self):
-        super(S3tests_java, self).teardown()
+        super(S3tests_java_local, self).teardown()
         log.debug('S3 Tests Java: TEARDOWN')
         for client in self.all_clients:
             self.remove_tests(client)
@@ -308,4 +308,4 @@ class S3tests_java(Task):
             )
 
 
-task = S3tests_java
+task = S3tests_java_local
