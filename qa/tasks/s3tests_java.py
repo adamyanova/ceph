@@ -87,9 +87,15 @@ class S3tests_java(Task):
         )
         if 'debug' in self.ctx.config:
             self.ctx.cluster.only(client).run(
-                args=['cp',
-                      '{tdir}/s3-tests-java/log4j.properties'.format(tdir=testdir),
-                      '{tdir}/s3-tests-java/src/main/resources/'.format(tdir=testdir)
+                args=['mkdir', '-p',
+                      '{tdir}/s3-tests-java/src/main/resources/'.format(
+                          tdir=testdir),
+                      run.Raw('&&'),
+                      'cp',
+                      '{tdir}/s3-tests-java/log4j.properties'.format(
+                          tdir=testdir),
+                      '{tdir}/s3-tests-java/src/main/resources/'.format(
+                          tdir=testdir)
                       ]
             )
 
