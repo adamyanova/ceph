@@ -278,14 +278,14 @@ class S3tests_java(Task):
     def remove_tests(self, client):
         log.info('S3 Tests Java: Removing s3-tests-java...')
         testdir = teuthology.get_testdir(self.ctx)
-        self.ctx.cluster.only(client).run(
-            args=[
-                'rm',
-                '-rf',
-                '{tdir}/s3-tests-java'.format(tdir=testdir),
-            ],
-            stdout=StringIO()
-        )
+        # self.ctx.cluster.only(client).run(
+        #     args=[
+        #         'rm',
+        #         '-rf',
+        #         '{tdir}/s3-tests-java'.format(tdir=testdir),
+        #     ],
+        #     stdout=StringIO()
+        # )
 
     def delete_users(self, client):
         log.info("S3 Tests Java: Deleting users...")

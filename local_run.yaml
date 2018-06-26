@@ -18,7 +18,7 @@ tasks:
 # - openssl_keys:
 - local_rgw:
     client.0:
-- s3tests_java:
+- s3tests_java_local:
     client.0:
       force-branch: ceph-master
       scan_for_encryption_keys: false
