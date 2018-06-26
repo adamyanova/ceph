@@ -132,7 +132,7 @@ class S3tests_java(Task):
             username = getpass.getuser()
             log.info("S3 Tests Java: username is: {username}".format(
                 username=username))
-            os.system("scp {username}@{host}:{tdir}s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
+            os.system("scp {username}@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
                 host=endpoint.hostname, tdir=testdir, username=username))
             s3tests_conf = teuthology.config_file(
                 '/home/{username}/s3tests.teuth.config.yaml'.format(username=username))
@@ -182,8 +182,8 @@ class S3tests_java(Task):
             clt=client)
 
         cfg_dict['DEFAULT']['host'] = socket.gethostbyname(endpoint.hostname)
-        cfg_dict['DEFAULT']['port'] = endpoint.port
-        cfg_dict['DEFAULT']['is_secure'] = True if endpoint.cert else False
+        cfg_dict['DEFAULT']['port'] = 443
+        cfg_dict['DEFAULT']['is_secure'] = True
 
     def _config_user(self, s3tests_conf, section, user, client):
         """
@@ -212,12 +212,12 @@ class S3tests_java(Task):
 
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(
-            ip=socket.gethostbyname(endpoint.hostname), port=endpoint.port))
+            ip=socket.gethostbyname(endpoint.hostname), port=443))
         self._set_cfg_entry(
             s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
-        self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
+        self._set_cfg_entry(s3tests_conf[section], 'port', 443)
         self._set_cfg_entry(
-            s3tests_conf[section], 'is_secure', True if endpoint.cert else False)
+            s3tests_conf[section], 'is_secure', True ) # if endpoint.cert else False
 
         log.info("S3 Tests Java: s3tests_conf[{sect}] is {s3cfg}".format(
             sect=section, s3cfg=s3tests_conf[section]))

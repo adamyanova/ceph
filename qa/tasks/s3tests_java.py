@@ -112,7 +112,7 @@ class S3tests_java(Task):
             args=['sudo',
                   'keytool',
                   '-import', '-alias', '{alias}'.format(
-                      alias=endpoint.hostname),
+                      alias='teuthology'),
                   '-keystore', '/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts',
                   '-file', '/home/ubuntu/cephtest/ca/rgw.{client}.crt'.format(
                       client=client),
