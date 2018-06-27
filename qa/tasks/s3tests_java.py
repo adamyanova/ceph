@@ -269,9 +269,8 @@ class S3tests_java(Task):
                       run.Raw('&&'),
                       '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
                       '-S', '--console', 'verbose', '--rerun-tasks', '--no-build-cache',
-                      '--tests', 'ObjectTest',
-                      run.Raw('>>'),
-                      'log.txt'
+                    #   run.Raw('>>'),
+                    #   'log.txt'
                       ],
                 stdout=StringIO()
             )
