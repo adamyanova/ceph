@@ -213,9 +213,9 @@ class S3tests_java(Task):
 
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(
-            ip=socket.gethostbyname(endpoint.hostname), port=endpoint.port))
+            ip=endpoint.hostname, port=endpoint.port))
         self._set_cfg_entry(
-            s3tests_conf[section], 'host', endpoint.hostnam)
+            s3tests_conf[section], 'host', endpoint.hostname)
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
         self._set_cfg_entry(
             s3tests_conf[section], 'is_secure', True if endpoint.cert else False)
