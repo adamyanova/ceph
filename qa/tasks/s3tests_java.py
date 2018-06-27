@@ -275,6 +275,13 @@ class S3tests_java(Task):
                       ],
                 stdout=StringIO()
             )
+                        self.ctx.cluster.only(client).run(
+                args=['cp',
+                      '{tdir}/s3-tests-java/log.txt'.format(tdir=testdir),
+                      '{tdir}/../'.format(tdir=testdir)
+                      ],
+                stdout=StringIO()
+            )
 
     def remove_tests(self, client):
         log.info('S3 Tests Java: Removing s3-tests-java...')
