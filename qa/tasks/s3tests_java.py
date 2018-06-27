@@ -275,7 +275,7 @@ class S3tests_java(Task):
                       ],
                 stdout=StringIO()
             )
-                        self.ctx.cluster.only(client).run(
+            self.ctx.cluster.only(client).run(
                 args=['cp',
                       '{tdir}/s3-tests-java/log.txt'.format(tdir=testdir),
                       '{tdir}/../'.format(tdir=testdir)
