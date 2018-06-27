@@ -182,7 +182,7 @@ class S3tests_java(Task):
         assert endpoint, 'S3 Tests Java: No RGW endpoint for {clt}'.format(
             clt=client)
 
-        cfg_dict['DEFAULT']['host'] = socket.gethostbyname(endpoint.hostname)
+        cfg_dict['DEFAULT']['host'] = endpoint.hostname
         cfg_dict['DEFAULT']['port'] = endpoint.port
         cfg_dict['DEFAULT']['is_secure'] = True if endpoint.cert else False
 
@@ -215,7 +215,7 @@ class S3tests_java(Task):
         self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(
             ip=socket.gethostbyname(endpoint.hostname), port=endpoint.port))
         self._set_cfg_entry(
-            s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
+            s3tests_conf[section], 'host', endpoint.hostnam)
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
         self._set_cfg_entry(
             s3tests_conf[section], 'is_secure', True if endpoint.cert else False)

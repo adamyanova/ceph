@@ -212,9 +212,9 @@ class S3tests_java_local(Task):
 
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(
-            ip=socket.gethostbyname(endpoint.hostname), port=443))
-        self._set_cfg_entry(
-            s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
+            ip=endpoint.hostname, port=443))
+        # self._set_cfg_entry(
+        #     s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', 443)
         self._set_cfg_entry(
             s3tests_conf[section], 'is_secure', True ) # if endpoint.cert else False
@@ -267,8 +267,8 @@ class S3tests_java_local(Task):
                       '{tdir}/s3-tests-java'.format(tdir=testdir),
                       run.Raw('&&'),
                       '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
-                      '-S', '--console', 'verbose', '--no-build-cache',
-                      '--tests', 'ObjectTest.testEncryptionKeySSECNoKey',
+                      '-S', '--console', 'verbose', '--no-build-cache', '--debug',
+                      '--tests', 'ObjectTest',
                       run.Raw('>>'),
                       'log.txt'
                       ],
