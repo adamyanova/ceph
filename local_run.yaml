@@ -1,26 +1,26 @@
 overrides:
-  install:
-    ceph:
-      conf:
-        client:
-          debug rgw: 20
-          rgw crypt require ssl: true
-          rgw crypt s3 kms encryption keys: testkey-1=YmluCmJvb3N0CmJvb3N0LWJ1aWxkCmNlcGguY29uZgo=
-              testkey-2=aWIKTWFrZWZpbGUKbWFuCm91dApzcmMKVGVzdGluZwo=
-          rgw lc debug interval: 10
-#   rgw:
-#     client.0:
-#       ssl certificate: rgw.client.0
-debug: true
+  ceph:
+    conf:
+      client:
+        debug rgw: 20
+        rgw crypt require ssl: false
+        rgw crypt s3 kms encryption keys: testkey-1=YmluCmJvb3N0CmJvb3N0LWJ1aWxkCmNlcGguY29uZgo=
+            testkey-2=aWIKTWFrZWZpbGUKbWFuCm91dApzcmMKVGVzdGluZwo=
+        rgw lc debug interval: 10
+  rgw:
+    client.0:
+      ssl certificate: rgw.client.0
 tasks:
 - local_cluster:
     cluster_path: /home/mu3e/ceph/build
-# - openssl_keys:
 - local_rgw:
     client.0:
+# - openssl_keys:
 - s3tests_java_local:
+    branch: master
+    repo: 'https://github.com/adamyanova/java_s3tests.git'
+    sha1:
     client.0:
-      force-branch: ceph-master
-      scan_for_encryption_keys: false
-      #extra_args: ['s3tests_boto3.functional.test_s3:test_bucket_list_delimiter_prefix']
+      extra_args: ['--tests', 'ObjectTest.testEncryptionKeySSECInvalidMd5']
+      log_fwd: ../s3tests_log.txt
 

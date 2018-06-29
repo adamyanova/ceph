@@ -30,8 +30,9 @@ class S3tests_java_local(Task):
     def __init__(self, ctx, config):
         super(S3tests_java_local, self).__init__(ctx, config)
         self.log = log
-        log.debug('S3 Tests Java: __INIT__ ')
-        assert hasattr(ctx, 'rgw'), 'S3tests_java_local must run after the rgw task'
+        log.debug('S3 Tests Java Local: __INIT__ ')
+        assert hasattr(
+            ctx, 'rgw'), 'S3tests_java_local must run after the rgw task'
         clients = ['client.{id}'.format(id=id_)
                    for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
         self.all_clients = [clients[0]]
@@ -40,42 +41,40 @@ class S3tests_java_local(Task):
 
     def setup(self):
         super(S3tests_java_local, self).setup()
-        log.debug('S3 Tests Java: SETUP')
+        log.debug('S3 Tests Java Local: SETUP')
         for client in self.all_clients:
             self.download_test_suite(client)
             self.install_required_packages(client)
 
     def begin(self):
         super(S3tests_java_local, self).begin()
-        log.debug('S3 Tests Java: BEGIN')
-        log.debug('S3 Tests Java: ctx is: {ctx}'.format(ctx=self.ctx))
+        log.debug('S3 Tests Java Local: BEGIN')
+        log.debug('S3 Tests Java Local: ctx is: {ctx}'.format(ctx=self.ctx))
         for (host, roles) in self.ctx.cluster.remotes.iteritems():
             log.info(
-                'S3 Tests Java: Cluster config is: {cfg}'.format(cfg=roles))
-            log.info('S3 Tests Java: Host is: {host}'.format(host=host))
+                'S3 Tests Java Local: Cluster config is: {cfg}'.format(cfg=roles))
+            log.info('S3 Tests Java Local: Host is: {host}'.format(host=host))
         self.create_users()
         self.run_tests()
 
     def teardown(self):
         super(S3tests_java_local, self).teardown()
-        log.debug('S3 Tests Java: TEARDOWN')
+        log.debug('S3 Tests Java Local: TEARDOWN')
         for client in self.all_clients:
             self.remove_tests(client)
             self.delete_users(client)
 
     def download_test_suite(self, client):
-        log.info("S3 Tests Java: Downloading test suite...")
+        log.info("S3 Tests Java Local: Downloading test suite...")
         testdir = teuthology.get_testdir(self.ctx)
-        branch = None
-        repo = None
-        if 's3tests_branch' in self.ctx.config:
-            branch = self.ctx.config['s3tests_branch']
-        if 's3tests_repo' in self.ctx.config:
-            repo = self.ctx.config['s3tests_repo']
-        if branch is None:
+        if 'branch' in self.config and self.config['branch'] is not None:
+            branch = self.config['branch']
+        else:
             branch = 'master'
-        if repo is None:
-            repo = 'https://github.com/adamyanova/java_s3tests.git'
+        if 'repo' in self.config and self.config['repo'] is not None:
+            repo = self.config['repo']
+        else:
+            repo = 'https://github.com/ceph/java_s3tests.git'
         self.ctx.cluster.only(client).run(
             args=[
                 'git', 'clone',
@@ -85,7 +84,17 @@ class S3tests_java_local(Task):
             ],
             stdout=StringIO()
         )
-        if 'debug' in self.ctx.config:
+
+        if 'sha1' in self.config and self.config['sha1'] is not None:
+            self.ctx.cluster.only(client).run(
+                args=[
+                    'cd', '{tdir}/s3-tests-java'.format(tdir=testdir),
+                    run.Raw('&&'),
+                    'git', 'reset', '--hard', self.config['sha1'],
+                ],
+            )
+
+        if 'debug' in self.config[client]:
             self.ctx.cluster.only(client).run(
                 args=['mkdir', '-p',
                       '{tdir}/s3-tests-java/src/main/resources/'.format(
@@ -100,51 +109,56 @@ class S3tests_java_local(Task):
             )
 
     def install_required_packages(self, client):
-        log.info("S3 Tests Java: Installing required packages...")
+        log.info("S3 Tests Java Local: Installing required packages...")
         testdir = teuthology.get_testdir(self.ctx)
         self.ctx.cluster.only(client).run(
             args=['{tdir}/s3-tests-java/bootstrap.sh'.format(tdir=testdir)],
             stdout=StringIO()
         )
-        # username = getpass.getuser()
-        # endpoint = self.ctx.rgw.role_endpoints.get(client)
-        # self.ctx.cluster.only(client).run(
-        #     args=['sudo',
-        #           'keytool',
-        #           '-import', '-alias', '{alias}'.format(
-        #               alias=endpoint.hostname),
-        #           '-keystore', '/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.171-8.b10.el7_5.x86_64/jre/lib/security/cacerts',
-        #           '-file', '/home/ubuntu/cephtest/ca/rgw.{client}.crt'.format(
-        #               client=client),
-        #           '-storepass', 'changeit',
-        #           ],
-        #     stdout=StringIO()
-        # )
+
+        # The openssl_keys task generates a self signed certificate for each client
+        # It is located in the {testdir}/ca/ and should be added to the java keystore
+        for task in self.ctx.config['tasks']:
+            if 'openssl_keys' in task:
+                endpoint = self.ctx.rgw.role_endpoints.get(client)
+                path = 'lib/security/cacerts'
+                self.ctx.cluster.only(client).run(
+                    args=['sudo',
+                          'keytool',
+                          '-import', '-alias', '{alias}'.format(
+                              alias=endpoint.hostname),
+                          '-keystore',
+                          run.Raw(
+                              '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
+                          '-file', '{tdir}/ca/rgw.{client}.crt'.format(
+                              tdir=testdir, client=client),
+                          '-storepass', 'changeit',
+                          ],
+                    stdout=StringIO()
+                )
 
     def create_users(self):
         """
         Create a main and an alternative s3 user.
         """
-        log.info("S3 Tests Java: Creating users...")
+        log.info("S3 Tests Java Local: Creating users...")
         testdir = teuthology.get_testdir(self.ctx)
         for client in self.all_clients:
             endpoint = self.ctx.rgw.role_endpoints.get(client)
             username = getpass.getuser()
-            log.info("S3 Tests Java: username is: {username}".format(
+            log.info("S3 Tests Java Local: username is: {username}".format(
                 username=username))
             os.system("scp {username}@{host}:{tdir}/s3-tests-java/s3tests.teuth.config.yaml /home/{username}/".format(
                 host=endpoint.hostname, tdir=testdir, username=username))
             s3tests_conf = teuthology.config_file(
                 '/home/{username}/s3tests.teuth.config.yaml'.format(username=username))
-            log.info("S3 Tests Java: s3tests_conf is {s3cfg}".format(
+            log.info("S3 Tests Java Local: s3tests_conf is {s3cfg}".format(
                 s3cfg=s3tests_conf))
-            # self._s3tests_cfg_default_section(
-            #     client=client, cfg_dict=s3tests_conf)
             for section, user in self.users.items():
                 if section in s3tests_conf:
                     userid = '{user}.{client}'.format(user=user, client=client)
                     log.debug(
-                        'S3 Tests Java: Creating user {userid}'.format(userid=userid))
+                        'S3 Tests Java Local: Creating user {userid}'.format(userid=userid))
                     self._config_user(s3tests_conf=s3tests_conf,
                                       section=section, user=userid, client=client)
                     cluster_name, daemon_type, client_id = teuthology.split_role(
@@ -175,16 +189,6 @@ class S3tests_java_local(Task):
             os.system(
                 "rm -rf /home/{username}/s3tests.teuth.config.yaml".format(username=username))
 
-    def _s3tests_cfg_default_section(self, client, cfg_dict):
-        log.info("S3 Tests Java: Add DEFAULT section")
-        endpoint = self.ctx.rgw.role_endpoints.get(client)
-        assert endpoint, 'S3 Tests Java: No RGW endpoint for {clt}'.format(
-            clt=client)
-
-        cfg_dict['DEFAULT']['host'] = socket.gethostbyname(endpoint.hostname)
-        cfg_dict['DEFAULT']['port'] = 443
-        cfg_dict['DEFAULT']['is_secure'] = True
-
     def _config_user(self, s3tests_conf, section, user, client):
         """
         Generate missing users data for this section by stashing away keys, ids, and
@@ -204,24 +208,19 @@ class S3tests_java_local(Task):
             s3tests_conf[section], 'access_key', '{ak}'.format(ak=access_key))
         self._set_cfg_entry(
             s3tests_conf[section], 'access_secret', '{sk}'.format(sk=secret))
-        self._set_cfg_entry(
-            s3tests_conf[section], 'kmskeyid', 'barbican_key_id')
-        self._set_cfg_entry(s3tests_conf[section], 'SSE', 'AES256')
         self._set_cfg_entry(s3tests_conf[section], 'region', 'mexico')
         self._set_cfg_entry(s3tests_conf[section], 'bucket', 'bucket1')
 
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         self._set_cfg_entry(s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(
             ip=endpoint.hostname, port=443))
-        # self._set_cfg_entry(
-        #     s3tests_conf[section], 'host', socket.gethostbyname(endpoint.hostname))
         self._set_cfg_entry(s3tests_conf[section], 'port', 443)
         self._set_cfg_entry(
-            s3tests_conf[section], 'is_secure', True ) # if endpoint.cert else False
+            s3tests_conf[section], 'is_secure', True)  # if endpoint.cert else False
 
-        log.info("S3 Tests Java: s3tests_conf[{sect}] is {s3cfg}".format(
+        log.info("S3 Tests Java Local: s3tests_conf[{sect}] is {s3cfg}".format(
             sect=section, s3cfg=s3tests_conf[section]))
-        log.debug('S3 Tests Java: Setion, User = {sect}, {user}'.format(
+        log.debug('S3 Tests Java Local: Setion, User = {sect}, {user}'.format(
             sect=section, user=user))
 
     def _write_cfg_file(self, cfg_dict, client):
@@ -250,7 +249,7 @@ class S3tests_java_local(Task):
             cfg_dict[key] = value
 
     def run_tests(self):
-        log.info("S3 Tests Java: Running tests...")
+        log.info("S3 Tests Java Local: Running tests...")
         testdir = teuthology.get_testdir(self.ctx)
         for client in self.all_clients:
             self.ctx.cluster.only(client).run(
@@ -262,33 +261,42 @@ class S3tests_java_local(Task):
                       ],
                 stdout=StringIO()
             )
+            args = ['cd',
+                    '{tdir}/s3-tests-java'.format(tdir=testdir),
+                    run.Raw('&&'),
+                    '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
+                    '-S', '--console', 'verbose', '--no-build-cache',
+                    ]
+            if 'extra_args' in self.config[client]:
+                args.extend(self.config[client]['extra_args'])
+            if 'debug' in self.config[client]:
+                args += ['--debug']
+            if 'log_fwd' in self.config[client]:
+                log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
+                if self.config[client]['log_fwd'] is not None:
+                    log_name = self.config[client]['log_fwd']
+                args += [run.Raw('>>'),
+                         log_name]
+
             self.ctx.cluster.only(client).run(
-                args=['cd',
-                      '{tdir}/s3-tests-java'.format(tdir=testdir),
-                      run.Raw('&&'),
-                      '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
-                      '-S', '--console', 'verbose', '--no-build-cache', '--debug',
-                      '--tests', 'ObjectTest',
-                      run.Raw('>>'),
-                      'log.txt'
-                      ],
+                args=args,
                 stdout=StringIO()
             )
 
     def remove_tests(self, client):
-        log.info('S3 Tests Java: Removing s3-tests-java...')
+        log.info('S3 Tests Java Local: Removing s3-tests-java...')
         testdir = teuthology.get_testdir(self.ctx)
-        # self.ctx.cluster.only(client).run(
-        #     args=[
-        #         'rm',
-        #         '-rf',
-        #         '{tdir}/s3-tests-java'.format(tdir=testdir),
-        #     ],
-        #     stdout=StringIO()
-        # )
+        self.ctx.cluster.only(client).run(
+            args=[
+                'rm',
+                '-rf',
+                '{tdir}/s3-tests-java'.format(tdir=testdir),
+            ],
+            stdout=StringIO()
+        )
 
     def delete_users(self, client):
-        log.info("S3 Tests Java: Deleting users...")
+        log.info("S3 Tests Java Local: Deleting users...")
         testdir = teuthology.get_testdir(self.ctx)
         for section, user in self.users.items():
             userid = '{user}.{client}'.format(user=user, client=client)
