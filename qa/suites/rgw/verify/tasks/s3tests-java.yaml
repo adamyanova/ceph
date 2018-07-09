@@ -1,0 +1,5 @@
+tasks:
+- s3tests-java:
+    branch: master
+    repo: 'https://github.com/adamyanova/java_s3tests.git'
+    client.0:
