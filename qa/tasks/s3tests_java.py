@@ -1,3 +1,6 @@
+"""
+Task for running RGW S3 tests with the AWS Java SDK
+"""
 from cStringIO import StringIO
 import logging
 
@@ -17,39 +20,6 @@ from teuthology.orchestra.remote import Remote
 
 log = logging.getLogger(__name__)
 
-"""
-    Task for running RGW S3 tests with the AWS Java SDK
-    
-    To run all tests on all clients::
-
-        tasks:
-        - ceph:
-        - rgw:
-        - s3tests-java:
-
-    To restrict testing to particular clients::
-
-        tasks:
-        - ceph:
-        - rgw: [client.0]
-        - s3tests-java: [client.0]
-
-    To pass extra arguments to gradle (e.g. to run a certain test, 
-    specify a different repository and branch for the test suite, 
-    run in debug mode or forward the gradle output to a log file)::
-
-        tasks:
-        - ceph:
-        - rgw: [client.0]
-        - s3tests_java_local:
-            branch: master
-            repo: 'https://github.com/adamyanova/java_s3tests.git'
-            sha1:
-            client.0:
-                extra_args: ['--tests', 'ObjectTest.testEncryptionKeySSECInvalidMd5']
-                debug:
-                log_fwd: ../sample_log.txt     
-"""
 
 class S3tests_java(Task):
     """
@@ -122,7 +92,7 @@ class S3tests_java(Task):
                 ],
             )
 
-        if 'debug' in self.config[client]:
+        if self.config[client] is not None and 'debug' in self.config[client]:
             self.ctx.cluster.only(client).run(
                 args=['mkdir', '-p',
                       '{tdir}/s3-tests-java/src/main/resources/'.format(
@@ -309,11 +279,11 @@ class S3tests_java(Task):
                     '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
                     '-S', '--console', 'verbose', '--no-build-cache',
                     ]
-            if 'extra_args' in self.config[client]:
+            if self.config[client] is not None and 'extra_args' in self.config[client]:
                 args.extend(self.config[client]['extra_args'])
-            if 'debug' in self.config[client]:
+            if self.config[client] is not None and 'debug' in self.config[client]:
                 args += ['--debug']
-            if 'log_fwd' in self.config[client]:
+            if self.config[client] is not None and 'log_fwd' in self.config[client]:
                 log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
                 if self.config[client]['log_fwd'] is not None:
                     log_name = self.config[client]['log_fwd']
