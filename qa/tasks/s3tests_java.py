@@ -126,24 +126,24 @@ class S3tests_java(Task):
         # It is located in the {testdir}/ca/ and should be added to the java keystore
         if client in self.config and self.config[client] is not None:
             if 'enable_ssl' in self.config[client]:
-                assert hasattr(
-                    self.ctx, 'openssl_keys'), 'When SSL is enabled the openssl_keys should run before the S3 tests task'
-                endpoint = self.ctx.rgw.role_endpoints.get(client)
-                path = 'lib/security/cacerts'
-                self.ctx.cluster.only(client).run(
-                    args=['sudo',
-                          'keytool',
-                          '-import', '-alias', '{alias}'.format(
-                              alias=endpoint.hostname),
-                          '-keystore',
-                          run.Raw(
-                              '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
-                          '-file', '{tdir}/ca/rgw.{client}.crt'.format(
-                              tdir=testdir, client=client),
-                          '-storepass', 'changeit',
-                          ],
-                    stdout=StringIO()
-                )
+                for task in self.ctx.config['tasks']:
+                    if 'openssl_keys' in task:
+                        endpoint = self.ctx.rgw.role_endpoints.get(client)
+                        path = 'lib/security/cacerts'
+                        self.ctx.cluster.only(client).run(
+                            args=['sudo',
+                                'keytool',
+                                '-import', '-alias', '{alias}'.format(
+                                    alias=endpoint.hostname),
+                                '-keystore',
+                                run.Raw(
+                                    '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
+                                '-file', '{tdir}/ca/rgw.{client}.crt'.format(
+                                    tdir=testdir, client=client),
+                                '-storepass', 'changeit',
+                                ],
+                            stdout=StringIO()
+                        )
 
     def create_users(self):
         """
