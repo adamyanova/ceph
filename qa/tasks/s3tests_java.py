@@ -124,8 +124,9 @@ class S3tests_java(Task):
 
         # The openssl_keys task generates a self signed certificate for each client
         # It is located in the {testdir}/ca/ and should be added to the java keystore
-        for task in self.ctx.config['tasks']:
-            if 'openssl_keys' in task:
+        if client in self.config and self.config[client] is not None:
+            if 'enable_ssl' in self.config[client]:
+                assert hasattr(self.ctx, 'openssl_keys') 
                 endpoint = self.ctx.rgw.role_endpoints.get(client)
                 path = 'lib/security/cacerts'
                 self.ctx.cluster.only(client).run(
