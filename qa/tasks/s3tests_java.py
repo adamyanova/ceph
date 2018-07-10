@@ -34,7 +34,12 @@ class S3tests_java(Task):
         assert hasattr(ctx, 'rgw'), 'S3tests_java must run after the rgw task'
         clients = ['client.{id}'.format(id=id_)
                    for id_ in teuthology.all_roles_of_type(self.ctx.cluster, 'client')]
-        self.all_clients = [clients[0]]
+        self.all_clients = []
+        for client in clients:
+            if client in self.config:
+                self.all_clients.extend([client])
+        if self.all_clients is None:
+            self.all_clients = 'client.0'
         self.users = {'s3main': 'tester',
                       's3alt': 'johndoe', 'tenanted': 'testx$tenanteduser'}
 
@@ -65,14 +70,13 @@ class S3tests_java(Task):
     def download_test_suite(self, client):
         log.info("S3 Tests Java Local: Downloading test suite...")
         testdir = teuthology.get_testdir(self.ctx)
-        if 'branch' in self.config and self.config['branch'] is not None:
-            branch = self.config['branch']
-        else:
-            branch = 'master'
-        if 'repo' in self.config and self.config['repo'] is not None:
-            repo = self.config['repo']
-        else:
-            repo = 'https://github.com/ceph/java_s3tests.git'
+        branch = 'master'
+        repo = 'https://github.com/ceph/java_s3tests.git'
+        if client in self.config and self.config[client] is not None:
+            if 'branch' in self.config[client] and self.config[client]['branch'] is not None:
+                branch = self.config[client]['branch']
+            if 'repo' in self.config[client] and self.config[client]['repo'] is not None:
+                repo = self.config[client]['repo']
         self.ctx.cluster.only(client).run(
             args=[
                 'git', 'clone',
@@ -82,17 +86,16 @@ class S3tests_java(Task):
             ],
             stdout=StringIO()
         )
-
-        if 'sha1' in self.config and self.config['sha1'] is not None:
-            self.ctx.cluster.only(client).run(
-                args=[
-                    'cd', '{tdir}/s3-tests-java'.format(tdir=testdir),
-                    run.Raw('&&'),
-                    'git', 'reset', '--hard', self.config['sha1'],
-                ],
-            )
-
         if client in self.config and self.config[client] is not None:
+            if 'sha1' in self.config[client] and self.config[client]['sha1'] is not None:
+                self.ctx.cluster.only(client).run(
+                    args=[
+                        'cd', '{tdir}/s3-tests-java'.format(tdir=testdir),
+                        run.Raw('&&'),
+                        'git', 'reset', '--hard', self.config[client]['sha1'],
+                    ],
+                )
+
             if 'debug' in self.config[client]:
                 self.ctx.cluster.only(client).run(
                     args=['mkdir', '-p',
