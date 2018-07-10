@@ -68,7 +68,7 @@ class S3tests_java(Task):
             self.delete_users(client)
 
     def download_test_suite(self, client):
-        log.info("S3 Tests Java Local: Downloading test suite...")
+        log.info("S3 Tests Java: Downloading test suite...")
         testdir = teuthology.get_testdir(self.ctx)
         branch = 'master'
         repo = 'https://github.com/ceph/java_s3tests.git'
@@ -265,7 +265,7 @@ class S3tests_java(Task):
             cfg_dict[key] = value
 
     def run_tests(self):
-        log.info("S3 Tests Java Local: Running tests...")
+        log.info("S3 Tests Java: Running tests...")
         testdir = teuthology.get_testdir(self.ctx)
         for client in self.all_clients:
             self.ctx.cluster.only(client).run(
