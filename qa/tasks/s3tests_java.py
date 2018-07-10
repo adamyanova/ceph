@@ -99,15 +99,15 @@ class S3tests_java(Task):
             if 'debug' in self.config[client]:
                 self.ctx.cluster.only(client).run(
                     args=['mkdir', '-p',
-                        '{tdir}/s3-tests-java/src/main/resources/'.format(
-                            tdir=testdir),
-                        run.Raw('&&'),
-                        'cp',
-                        '{tdir}/s3-tests-java/log4j.properties'.format(
-                            tdir=testdir),
-                        '{tdir}/s3-tests-java/src/main/resources/'.format(
-                            tdir=testdir)
-                        ]
+                          '{tdir}/s3-tests-java/src/main/resources/'.format(
+                              tdir=testdir),
+                          run.Raw('&&'),
+                          'cp',
+                          '{tdir}/s3-tests-java/log4j.properties'.format(
+                              tdir=testdir),
+                          '{tdir}/s3-tests-java/src/main/resources/'.format(
+                              tdir=testdir)
+                          ]
                 )
 
     def install_required_packages(self, client):
@@ -126,7 +126,8 @@ class S3tests_java(Task):
         # It is located in the {testdir}/ca/ and should be added to the java keystore
         if client in self.config and self.config[client] is not None:
             if 'enable_ssl' in self.config[client]:
-                assert hasattr(self.ctx, 'openssl_keys') 
+                assert hasattr(
+                    self.ctx, 'openssl_keys'), 'When SSL is enabled the openssl_keys should run before the S3 tests task'
                 endpoint = self.ctx.rgw.role_endpoints.get(client)
                 path = 'lib/security/cacerts'
                 self.ctx.cluster.only(client).run(
@@ -223,7 +224,7 @@ class S3tests_java(Task):
             s3tests_conf[section], 'region', 'us-east-1')
         self._set_cfg_entry(
             s3tests_conf[section], 'endpoint', '{ip}:{port}'.format(
-            ip=endpoint.hostname, port=endpoint.port))
+                ip=endpoint.hostname, port=endpoint.port))
         self._set_cfg_entry(
             s3tests_conf[section], 'host', endpoint.hostname)
         self._set_cfg_entry(
@@ -294,7 +295,7 @@ class S3tests_java(Task):
                     if self.config[client]['log_fwd'] is not None:
                         log_name = self.config[client]['log_fwd']
                     args += [run.Raw('>>'),
-                            log_name]
+                             log_name]
 
             self.ctx.cluster.only(client).run(
                 args=args,
