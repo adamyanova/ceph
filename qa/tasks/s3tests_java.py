@@ -92,19 +92,20 @@ class S3tests_java(Task):
                 ],
             )
 
-        if self.config[client] is not None and 'debug' in self.config[client]:
-            self.ctx.cluster.only(client).run(
-                args=['mkdir', '-p',
-                      '{tdir}/s3-tests-java/src/main/resources/'.format(
-                          tdir=testdir),
-                      run.Raw('&&'),
-                      'cp',
-                      '{tdir}/s3-tests-java/log4j.properties'.format(
-                          tdir=testdir),
-                      '{tdir}/s3-tests-java/src/main/resources/'.format(
-                          tdir=testdir)
-                      ]
-            )
+        if client in self.config and self.config[client] is not None:
+            if 'debug' in self.config[client]:
+                self.ctx.cluster.only(client).run(
+                    args=['mkdir', '-p',
+                        '{tdir}/s3-tests-java/src/main/resources/'.format(
+                            tdir=testdir),
+                        run.Raw('&&'),
+                        'cp',
+                        '{tdir}/s3-tests-java/log4j.properties'.format(
+                            tdir=testdir),
+                        '{tdir}/s3-tests-java/src/main/resources/'.format(
+                            tdir=testdir)
+                        ]
+                )
 
     def install_required_packages(self, client):
         """
@@ -279,16 +280,17 @@ class S3tests_java(Task):
                     '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
                     '-S', '--console', 'verbose', '--no-build-cache',
                     ]
-            if self.config[client] is not None and 'extra_args' in self.config[client]:
-                args.extend(self.config[client]['extra_args'])
-            if self.config[client] is not None and 'debug' in self.config[client]:
-                args += ['--debug']
-            if self.config[client] is not None and 'log_fwd' in self.config[client]:
-                log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
-                if self.config[client]['log_fwd'] is not None:
-                    log_name = self.config[client]['log_fwd']
-                args += [run.Raw('>>'),
-                         log_name]
+            if client in self.config and self.config[client] is not None:
+                if 'extra_args' in self.config[client]:
+                    args.extend(self.config[client]['extra_args'])
+                if 'debug' in self.config[client]:
+                    args += ['--debug']
+                if 'log_fwd' in self.config[client]:
+                    log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
+                    if self.config[client]['log_fwd'] is not None:
+                        log_name = self.config[client]['log_fwd']
+                    args += [run.Raw('>>'),
+                            log_name]
 
             self.ctx.cluster.only(client).run(
                 args=args,
