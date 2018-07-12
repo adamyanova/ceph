@@ -277,7 +277,7 @@ class S3tests_java(Task):
                     '{tdir}/s3-tests-java'.format(tdir=testdir),
                     run.Raw('&&'),
                     '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
-                    '-S', '--console', 'verbose', '--no-build-cache',
+                    '--rerun-tasks', '--no-build-cache',
                     ]
             if client in self.config and self.config[client] is not None:
                 if 'extra_args' in self.config[client]:
