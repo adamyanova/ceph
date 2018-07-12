@@ -4,3 +4,4 @@ tasks:
         branch: wip
         repo: 'https://github.com/adamyanova/java_s3tests.git'
         log_fwd:
+        debug:
