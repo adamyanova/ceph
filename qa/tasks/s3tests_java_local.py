@@ -119,26 +119,22 @@ class S3tests_java_local(Task):
             stdout=StringIO()
         )
 
-        # The openssl_keys task generates a self signed certificate for each client
-        # It is located in the {testdir}/ca/ and should be added to the java keystore
-        for task in self.ctx.config['tasks']:
-            if 'openssl_keys' in task:
-                endpoint = self.ctx.rgw.role_endpoints.get(client)
-                path = 'lib/security/cacerts'
-                self.ctx.cluster.only(client).run(
-                    args=['sudo',
-                          'keytool',
-                          '-import', '-alias', '{alias}'.format(
-                              alias=endpoint.hostname),
-                          '-keystore',
-                          run.Raw(
-                              '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
-                          '-file', '{tdir}/ca/rgw.{client}.crt'.format(
-                              tdir=testdir, client=client),
-                          '-storepass', 'changeit',
-                          ],
-                    stdout=StringIO()
-                )
+        endpoint = self.ctx.rgw.role_endpoints.get(client)
+        if endpoint.cert:
+            path = 'lib/security/cacerts'
+            self.ctx.cluster.only(client).run(
+                args=['sudo',
+                    'keytool',
+                    '-import', '-alias', '{alias}'.format(
+                        alias=endpoint.hostname),
+                    '-keystore',
+                    run.Raw(
+                        '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
+                    '-file', endpoint.cert.certificate,
+                    '-storepass', 'changeit',
+                    ],
+                stdout=StringIO()
+            )
 
     def create_users(self):
         """
