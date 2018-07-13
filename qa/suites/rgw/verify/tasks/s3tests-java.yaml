@@ -3,4 +3,5 @@ tasks:
     client.0:
         branch: wip
         repo: 'https://github.com/adamyanova/java_s3tests.git'
-        
+        extra_args: ['--tests', 'AWS4Test.testMultipartUploadIncorrectMissingPartLLAPIAWS4']
+        debug:
