@@ -296,6 +296,14 @@ class S3tests_java(Task):
 
             for gr in test_groups:
                 self.ctx.cluster.only(client).run(
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                    stdout=StringIO()
+                )
+                self.ctx.cluster.only(client).run(
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                    stdout=StringIO()
+                )
+                self.ctx.cluster.only(client).run(
                     args= args + ['--tests'] + [gr] + extra_args,
                     stdout=StringIO()
                 )
