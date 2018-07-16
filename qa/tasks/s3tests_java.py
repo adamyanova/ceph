@@ -291,10 +291,24 @@ class S3tests_java(Task):
                     args += [run.Raw('>>'),
                              log_name]
 
-            self.ctx.cluster.only(client).run(
-                args=args,
-                stdout=StringIO()
-            )
+            test_groups = ['AWS4Test', 'BucketTest', 'ObjectTest']
+
+            for gr in test_groups:
+                tmp_arg=args
+                tmp_arg += ['--tests']
+                tmp_arg.extend(gr)
+                self.ctx.cluster.only(client).run(
+                    args=tmp_arg,
+                    stdout=StringIO()
+                )
+                self.ctx.cluster.only(client).run(
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                    stdout=StringIO()
+                )
+                self.ctx.cluster.only(client).run(
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                    stdout=StringIO()
+                )
 
     def remove_tests(self, client):
         log.info('S3 Tests Java: Removing s3-tests-java...')
