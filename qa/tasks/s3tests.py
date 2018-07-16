@@ -38,7 +38,7 @@ def download(ctx, config):
             suite_branch = ctx.config.get('suite_branch', ceph_branch)
             if suite_branch in s3_branches:
                 branch = cconf.get('branch', suite_branch)
-	    else:
+        else:
                 branch = cconf.get('branch', 'ceph-' + suite_branch)
         if not branch:
             raise ValueError(
@@ -191,7 +191,7 @@ def configure(ctx, config):
             s3tests_conf['DEFAULT']['host'] = 'localhost'
 
         if properties is not None and 'slow_backend' in properties:
-	    s3tests_conf['fixtures']['slow backend'] = properties['slow_backend']
+            s3tests_conf['fixtures']['slow backend'] = properties['slow_backend']
 
         (remote,) = ctx.cluster.only(client).remotes.keys()
         remote.run(
