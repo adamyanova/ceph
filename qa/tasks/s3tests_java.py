@@ -279,26 +279,24 @@ class S3tests_java(Task):
                     '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
                     '--rerun-tasks', '--no-build-cache',
                     ]
+            extra_args = []
             if client in self.config and self.config[client] is not None:
                 if 'extra_args' in self.config[client]:
-                    args.extend(self.config[client]['extra_args'])
+                    extra_args.extend(self.config[client]['extra_args'])
                 if 'debug' in self.config[client]:
-                    args += ['--debug']
+                    extra_args += ['--debug']
                 if 'log_fwd' in self.config[client]:
                     log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
                     if self.config[client]['log_fwd'] is not None:
                         log_name = self.config[client]['log_fwd']
-                    args += [run.Raw('>>'),
-                             log_name]
+                    extra_args += [run.Raw('>>'),
+                            log_name]
 
             test_groups = ['AWS4Test', 'BucketTest', 'ObjectTest']
 
             for gr in test_groups:
-                tmp_arg=args
-                tmp_arg += ['--tests']
-                tmp_arg.extend(gr)
                 self.ctx.cluster.only(client).run(
-                    args=tmp_arg,
+                    args= args + ['--tests'] + [gr] + extra_args,
                     stdout=StringIO()
                 )
                 self.ctx.cluster.only(client).run(
