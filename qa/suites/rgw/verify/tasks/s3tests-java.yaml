@@ -3,5 +3,5 @@ tasks:
     client.0:
         branch: wip
         repo: 'https://github.com/adamyanova/java_s3tests.git'
-        extra_args: ['--tests', 'ObjectTest.testMultipartUploadIncorrectMissingPartLLAPI']
+        extra_args: ['--tests', 'ObjectTest.testMultipartCopyMultipleSizesLLAPI']
         debug:
