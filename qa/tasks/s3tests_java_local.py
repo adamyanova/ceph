@@ -266,22 +266,34 @@ class S3tests_java_local(Task):
                     '/opt/gradle/gradle-4.7/bin/gradle', 'clean', 'test',
                     '-S', '--console', 'verbose', '--no-build-cache',
                     ]
+            extra_args = []
             if client in self.config and self.config[client] is not None:
                 if 'extra_args' in self.config[client]:
-                    args.extend(self.config[client]['extra_args'])
+                    extra_args.extend(self.config[client]['extra_args'])
                 if 'debug' in self.config[client]:
-                    args += ['--debug']
+                    extra_args += ['--debug']
                 if 'log_fwd' in self.config[client]:
                     log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
                     if self.config[client]['log_fwd'] is not None:
                         log_name = self.config[client]['log_fwd']
-                    args += [run.Raw('>>'),
+                    extra_args += [run.Raw('>>'),
                             log_name]
 
-            self.ctx.cluster.only(client).run(
-                args=args,
-                stdout=StringIO()
-            )
+            test_groups = ['AWS4Test.testObjectCreate*', 'BucketTest', 'ObjectTest']
+
+            for gr in test_groups:
+                self.ctx.cluster.only(client).run(
+                    args= args + ['--tests'] + [gr] + extra_args,
+                    stdout=StringIO()
+                )
+                self.ctx.cluster.only(client).run(
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                    stdout=StringIO()
+                )
+                self.ctx.cluster.only(client).run(
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                    stdout=StringIO()
+                )
 
     def remove_tests(self, client):
         log.info('S3 Tests Java Local: Removing s3-tests-java...')
