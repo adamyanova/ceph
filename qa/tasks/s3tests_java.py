@@ -60,9 +60,9 @@ class S3tests_java(Task):
         self.create_users()
         self.run_tests()
 
-    def teardown(self):
-        super(S3tests_java, self).teardown()
-        log.debug('S3 Tests Java: TEARDOWN')
+    def end(self):
+        super(S3tests_java, self).end()
+        log.debug('S3 Tests Java: END')
         for client in self.all_clients:
             self.remove_tests(client)
             self.delete_users(client)
