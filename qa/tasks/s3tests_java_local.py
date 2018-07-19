@@ -267,9 +267,11 @@ class S3tests_java_local(Task):
                     '-S', '--console', 'verbose', '--no-build-cache',
                     ]
             extra_args = []
+            suppress_groups = False
             if client in self.config and self.config[client] is not None:
                 if 'extra_args' in self.config[client]:
                     extra_args.extend(self.config[client]['extra_args'])
+                    suppress_groups = True
                 if 'debug' in self.config[client]:
                     extra_args += ['--debug']
                 if 'log_fwd' in self.config[client]:
@@ -279,13 +281,30 @@ class S3tests_java_local(Task):
                     extra_args += [run.Raw('>>'),
                             log_name]
 
-            test_groups = ['AWS4Test.testObjectCreate*', 'BucketTest', 'ObjectTest']
+            if not suppress_groups:
+                test_groups = ['AWS4Test', 'BucketTest', 'ObjectTest']
+            else:
+                test_groups = ['All']
 
             for gr in test_groups:
                 self.ctx.cluster.only(client).run(
-                    args= args + ['--tests'] + [gr] + extra_args,
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
                     stdout=StringIO()
                 )
+                self.ctx.cluster.only(client).run(
+                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                    stdout=StringIO()
+                )
+                if gr is not 'All':
+                    self.ctx.cluster.only(client).run(
+                        args= args + ['--tests'] + [gr] + extra_args,
+                        stdout=StringIO()
+                    )
+                else:
+                    self.ctx.cluster.only(client).run(
+                        args= args + extra_args,
+                        stdout=StringIO()
+                    )
                 self.ctx.cluster.only(client).run(
                     args=['radosgw-admin', 'gc', 'process', '--include-all'],
                     stdout=StringIO()
