@@ -317,7 +317,8 @@ class S3tests_java(Task):
                     ]
             extra_args = []
             suppress_groups = False
-            log_fwd = False
+            self.log_fwd = False
+            self.log_name = ''
             if client in self.config and self.config[client] is not None:
                 if 'extra-args' in self.config[client]:
                     extra_args.extend(self.config[client]['extra-args'])
@@ -325,12 +326,12 @@ class S3tests_java(Task):
                 if 'debug' in self.config[client]:
                     extra_args += ['--debug']
                 if 'log-fwd' in self.config[client]:
-                    log_fwd = True
-                    log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
+                    self.log_fwd = True
+                    self.log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
                     if self.config[client]['log-fwd'] is not None:
-                        log_name = self.config[client]['log-fwd']
+                        self.log_name = self.config[client]['log-fwd']
                     extra_args += [run.Raw('>>'),
-                                   log_name]
+                                   self.log_name]
 
             if not suppress_groups:
                 test_groups = ['AWS4Test', 'BucketTest', 'ObjectTest']
@@ -365,20 +366,21 @@ class S3tests_java(Task):
                     stdout=StringIO()
                 )
 
-                if log_fwd:
-                    self.ctx.cluster.only(client).run(
-                        args=['cd',
-                              '{tdir}/s3-tests-java'.format(tdir=testdir),
-                              run.Raw('&&'),
-                              'cat', log_name,
-                              run.Raw('&&'),
-                              'rm', log_name],
-                        stdout=StringIO()
-                    )
-
     def remove_tests(self, client):
         log.info('S3 Tests Java: Removing s3-tests-java...')
         testdir = teuthology.get_testdir(self.ctx)
+
+        if self.log_fwd:
+            self.ctx.cluster.only(client).run(
+                args=['cd',
+                        '{tdir}/s3-tests-java'.format(tdir=testdir),
+                        run.Raw('&&'),
+                        'cat', self.log_name,
+                        run.Raw('&&'),
+                        'rm', self.log_name],
+                stdout=StringIO()
+            )
+
         self.ctx.cluster.only(client).run(
             args=[
                 'rm',
