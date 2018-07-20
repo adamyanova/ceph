@@ -20,6 +20,42 @@ from teuthology.orchestra.remote import Remote
 
 log = logging.getLogger(__name__)
 
+"""
+    Task for running RGW S3 tests with the AWS Java SDK
+    
+    Tests run only on clients specified in the s3tests-java config section. 
+    If no client is given a default 'client.0' is chosen.
+    If such does not match the rgw client the task will fail.
+        
+        tasks:
+        - ceph:
+        - rgw: [client.0]
+        - s3tests-java:
+            client.0:
+
+    Extra arguments can be passed by adding options to the corresponding client
+    section under the s3tests-java task (e.g. to run a certain test, 
+    specify a different repository and branch for the test suite, 
+    run in debug mode or forward the gradle output to a log file):
+
+        tasks:
+        - ceph:
+        - rgw: [client.0]
+        - s3tests-java:
+            client.0:
+                force-branch: wip
+                force-repo: 'https://github.com/adamyanova/java_s3tests.git'
+                log-fwd: '../s3tests-java.log'
+                debug:
+                extra-args: ['--tests', 'ObjectTest.testEncryptionKeySSECInvalidMd5']
+
+    To run a specific test, provide its name to the extra-args section e.g.:
+        - s3tests-java:
+            client.0:
+                extra-args: ['--tests', 'ObjectTest.testEncryptionKeySSECInvalidMd5']
+    
+"""
+
 
 class S3tests_java(Task):
     """
@@ -73,10 +109,10 @@ class S3tests_java(Task):
         branch = 'master'
         repo = 'https://github.com/ceph/java_s3tests.git'
         if client in self.config and self.config[client] is not None:
-            if 'branch' in self.config[client] and self.config[client]['branch'] is not None:
-                branch = self.config[client]['branch']
-            if 'repo' in self.config[client] and self.config[client]['repo'] is not None:
-                repo = self.config[client]['repo']
+            if 'force-branch' in self.config[client] and self.config[client]['force-branch'] is not None:
+                branch = self.config[client]['force-branch']
+            if 'force-repo' in self.config[client] and self.config[client]['force-repo'] is not None:
+                repo = self.config[client]['force-repo']
         self.ctx.cluster.only(client).run(
             args=[
                 'git', 'clone',
@@ -127,15 +163,15 @@ class S3tests_java(Task):
             path = 'lib/security/cacerts'
             self.ctx.cluster.only(client).run(
                 args=['sudo',
-                    'keytool',
-                    '-import', '-alias', '{alias}'.format(
-                        alias=endpoint.hostname),
-                    '-keystore',
-                    run.Raw(
-                        '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
-                    '-file', endpoint.cert.certificate,
-                    '-storepass', 'changeit',
-                    ],
+                      'keytool',
+                      '-import', '-alias', '{alias}'.format(
+                          alias=endpoint.hostname),
+                      '-keystore',
+                      run.Raw(
+                          '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
+                      '-file', endpoint.cert.certificate,
+                      '-storepass', 'changeit',
+                      ],
                 stdout=StringIO()
             )
 
@@ -281,18 +317,20 @@ class S3tests_java(Task):
                     ]
             extra_args = []
             suppress_groups = False
+            log_fwd = False
             if client in self.config and self.config[client] is not None:
-                if 'extra_args' in self.config[client]:
-                    extra_args.extend(self.config[client]['extra_args'])
+                if 'extra-args' in self.config[client]:
+                    extra_args.extend(self.config[client]['extra-args'])
                     suppress_groups = True
                 if 'debug' in self.config[client]:
                     extra_args += ['--debug']
-                if 'log_fwd' in self.config[client]:
+                if 'log-fwd' in self.config[client]:
+                    log_fwd = True
                     log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
-                    if self.config[client]['log_fwd'] is not None:
-                        log_name = self.config[client]['log_fwd']
+                    if self.config[client]['log-fwd'] is not None:
+                        log_name = self.config[client]['log-fwd']
                     extra_args += [run.Raw('>>'),
-                            log_name]
+                                   log_name]
 
             if not suppress_groups:
                 test_groups = ['AWS4Test', 'BucketTest', 'ObjectTest']
@@ -310,12 +348,12 @@ class S3tests_java(Task):
                 )
                 if gr is not 'All':
                     self.ctx.cluster.only(client).run(
-                        args= args + ['--tests'] + [gr] + extra_args,
+                        args=args + ['--tests'] + [gr] + extra_args,
                         stdout=StringIO()
                     )
                 else:
                     self.ctx.cluster.only(client).run(
-                        args= args + extra_args,
+                        args=args + extra_args,
                         stdout=StringIO()
                     )
                 self.ctx.cluster.only(client).run(
@@ -326,6 +364,12 @@ class S3tests_java(Task):
                     args=['radosgw-admin', 'gc', 'process', '--include-all'],
                     stdout=StringIO()
                 )
+
+                if log_fwd:
+                    self.ctx.cluster.only(client).run(
+                        args=['cat', log_name],
+                        stdout=StringIO()
+                    )
 
     def remove_tests(self, client):
         log.info('S3 Tests Java: Removing s3-tests-java...')

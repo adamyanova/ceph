@@ -74,10 +74,10 @@ class S3tests_java_local(Task):
         branch = 'master'
         repo = 'https://github.com/ceph/java_s3tests.git'
         if client in self.config and self.config[client] is not None:
-            if 'branch' in self.config[client] and self.config[client]['branch'] is not None:
-                branch = self.config[client]['branch']
-            if 'repo' in self.config[client] and self.config[client]['repo'] is not None:
-                repo = self.config[client]['repo']
+            if 'force-branch' in self.config[client] and self.config[client]['force-branch'] is not None:
+                branch = self.config[client]['force-branch']
+            if 'force-repo' in self.config[client] and self.config[client]['force-repo'] is not None:
+                repo = self.config[client]['force-repo']
         self.ctx.cluster.only(client).run(
             args=[
                 'git', 'clone',
@@ -100,15 +100,15 @@ class S3tests_java_local(Task):
             if 'debug' in self.config[client]:
                 self.ctx.cluster.only(client).run(
                     args=['mkdir', '-p',
-                        '{tdir}/s3-tests-java/src/main/resources/'.format(
-                            tdir=testdir),
-                        run.Raw('&&'),
-                        'cp',
-                        '{tdir}/s3-tests-java/log4j.properties'.format(
-                            tdir=testdir),
-                        '{tdir}/s3-tests-java/src/main/resources/'.format(
-                            tdir=testdir)
-                        ]
+                          '{tdir}/s3-tests-java/src/main/resources/'.format(
+                              tdir=testdir),
+                          run.Raw('&&'),
+                          'cp',
+                          '{tdir}/s3-tests-java/log4j.properties'.format(
+                              tdir=testdir),
+                          '{tdir}/s3-tests-java/src/main/resources/'.format(
+                              tdir=testdir)
+                          ]
                 )
 
     def install_required_packages(self, client):
@@ -124,15 +124,15 @@ class S3tests_java_local(Task):
             path = 'lib/security/cacerts'
             self.ctx.cluster.only(client).run(
                 args=['sudo',
-                    'keytool',
-                    '-import', '-alias', '{alias}'.format(
-                        alias=endpoint.hostname),
-                    '-keystore',
-                    run.Raw(
-                        '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
-                    '-file', endpoint.cert.certificate,
-                    '-storepass', 'changeit',
-                    ],
+                      'keytool',
+                      '-import', '-alias', '{alias}'.format(
+                          alias=endpoint.hostname),
+                      '-keystore',
+                      run.Raw(
+                          '$(readlink -e $(dirname $(readlink -e $(which keytool)))/../{path})'.format(path=path)),
+                      '-file', endpoint.cert.certificate,
+                      '-storepass', 'changeit',
+                      ],
                 stdout=StringIO()
             )
 
@@ -268,18 +268,20 @@ class S3tests_java_local(Task):
                     ]
             extra_args = []
             suppress_groups = False
+            log_fwd = False
             if client in self.config and self.config[client] is not None:
-                if 'extra_args' in self.config[client]:
-                    extra_args.extend(self.config[client]['extra_args'])
+                if 'extra-args' in self.config[client]:
+                    extra_args.extend(self.config[client]['extra-args'])
                     suppress_groups = True
                 if 'debug' in self.config[client]:
                     extra_args += ['--debug']
-                if 'log_fwd' in self.config[client]:
+                if 'log-fwd' in self.config[client]:
+                    log_fwd = True
                     log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
-                    if self.config[client]['log_fwd'] is not None:
-                        log_name = self.config[client]['log_fwd']
+                    if self.config[client]['log-fwd'] is not None:
+                        log_name = self.config[client]['log-fwd']
                     extra_args += [run.Raw('>>'),
-                            log_name]
+                                   log_name]
 
             if not suppress_groups:
                 test_groups = ['AWS4Test', 'BucketTest', 'ObjectTest']
@@ -297,12 +299,12 @@ class S3tests_java_local(Task):
                 )
                 if gr is not 'All':
                     self.ctx.cluster.only(client).run(
-                        args= args + ['--tests'] + [gr] + extra_args,
+                        args=args + ['--tests'] + [gr] + extra_args,
                         stdout=StringIO()
                     )
                 else:
                     self.ctx.cluster.only(client).run(
-                        args= args + extra_args,
+                        args=args + extra_args,
                         stdout=StringIO()
                     )
                 self.ctx.cluster.only(client).run(
@@ -313,6 +315,12 @@ class S3tests_java_local(Task):
                     args=['radosgw-admin', 'gc', 'process', '--include-all'],
                     stdout=StringIO()
                 )
+
+                if log_fwd:
+                    self.ctx.cluster.only(client).run(
+                        args=['cat', log_name],
+                        stdout=StringIO()
+                    )
 
     def remove_tests(self, client):
         log.info('S3 Tests Java Local: Removing s3-tests-java...')
