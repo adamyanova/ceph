@@ -370,7 +370,9 @@ class S3tests_java(Task):
                         args=['cd',
                               '{tdir}/s3-tests-java'.format(tdir=testdir),
                               run.Raw('&&'),
-                              'cat', log_name],
+                              'cat', log_name,
+                              run.Raw('&&'),
+                              'rm', log_name],
                         stdout=StringIO()
                     )
 
