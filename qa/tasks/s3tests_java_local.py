@@ -318,7 +318,10 @@ class S3tests_java_local(Task):
 
                 if log_fwd:
                     self.ctx.cluster.only(client).run(
-                        args=['cat', log_name],
+                        args=['cd',
+                              '{tdir}/s3-tests-java'.format(tdir=testdir),
+                              run.Raw('&&'),
+                              'cat', log_name],
                         stdout=StringIO()
                     )
 
