@@ -18,3 +18,4 @@ overrides:
         osd_max_pg_log_entries: 10
       client:
         rgw lc debug interval: 10
+        rgw thread pool size: 100
