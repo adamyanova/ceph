@@ -289,17 +289,18 @@ class S3tests_go_local(Task):
                     extra_args += [run.Raw('>>'),
                             log_name]
 
-            test_groups = ['awsv4', 'bucket', 'object']
-
-            for gr in test_groups:
-                self.ctx.cluster.only(client).run(
-                    args= args + ['-run'] + [gr] + extra_args,
-                    stdout=StringIO()
-                )
+            for i in range(2):
                 self.ctx.cluster.only(client).run(
                     args=['radosgw-admin', 'gc', 'process', '--include-all'],
                     stdout=StringIO()
                 )
+
+            self.ctx.cluster.only(client).run(
+                args= args + extra_args,
+                stdout=StringIO()
+            )
+            
+            for i in range(2):
                 self.ctx.cluster.only(client).run(
                     args=['radosgw-admin', 'gc', 'process', '--include-all'],
                     stdout=StringIO()
