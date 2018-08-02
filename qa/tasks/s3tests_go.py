@@ -73,9 +73,9 @@ class S3tests_go(Task):
         branch = 'master'
         repo = 'https://github.com/ceph/go_s3tests.git'
         if client in self.config and self.config[client] is not None:
-            if 'branch' in self.config[client] and self.config[client]['branch'] is not None:
+            if 'force-branch' in self.config[client] and self.config[client]['branch'] is not None:
                 branch = self.config[client]['branch']
-            if 'repo' in self.config[client] and self.config[client]['repo'] is not None:
+            if 'force-repo' in self.config[client] and self.config[client]['repo'] is not None:
                 repo = self.config[client]['repo']
         self.ctx.cluster.only(client).run(
             args=[
@@ -290,12 +290,12 @@ class S3tests_go(Task):
                     ]
             extra_args = []
             if client in self.config and self.config[client] is not None:
-                if 'extra_args' in self.config[client]:
-                    extra_args.extend(self.config[client]['extra_args'])
-                if 'log_fwd' in self.config[client]:
-                    log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
-                    if self.config[client]['log_fwd'] is not None:
-                        log_name = self.config[client]['log_fwd']
+                if 'extra-args' in self.config[client]:
+                    extra_args.extend(self.config[client]['extra-args'])
+                if 'log-fwd' in self.config[client]:
+                    log_name = '{tdir}/s3tests-go-log.txt'.format(tdir=testdir)
+                    if self.config[client]['log-fwd'] is not None:
+                        log_name = self.config[client]['log-fwd']
                     extra_args += [run.Raw('>>'),
                             log_name]
 
