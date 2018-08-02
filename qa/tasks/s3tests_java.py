@@ -197,11 +197,11 @@ class S3tests_java(Task):
                 s3cfg=s3tests_conf))
             for section, user in self.users.items():
                 if section in s3tests_conf:
-                    userid = '{user}.{client}'.format(user=user, client=client)
+                    s3_user_id = '{user}.{client}'.format(user=user, client=client)
                     log.debug(
-                        'S3 Tests Java: Creating user {userid}'.format(userid=userid))
+                        'S3 Tests Java: Creating user {s3_user_id}'.format(s3_user_id=s3_user_id))
                     self._config_user(s3tests_conf=s3tests_conf,
-                                      section=section, user=userid, client=client)
+                                      section=section, user=s3_user_id, client=client)
                     cluster_name, daemon_type, client_id = teuthology.split_role(
                         client)
                     client_with_id = daemon_type + '.' + client_id
@@ -339,14 +339,12 @@ class S3tests_java(Task):
                 test_groups = ['All']
 
             for gr in test_groups:
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
+                for i in range(2):
+                    self.ctx.cluster.only(client).run(
+                        args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                        stdout=StringIO()
+                    )
+
                 if gr is not 'All':
                     self.ctx.cluster.only(client).run(
                         args=args + ['--tests'] + [gr] + extra_args,
@@ -357,14 +355,12 @@ class S3tests_java(Task):
                         args=args + extra_args,
                         stdout=StringIO()
                     )
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
+
+                for i in range(2):
+                    self.ctx.cluster.only(client).run(
+                        args=['radosgw-admin', 'gc', 'process', '--include-all'],
+                        stdout=StringIO()
+                    )
 
     def remove_tests(self, client):
         log.info('S3 Tests Java: Removing s3-tests-java...')
@@ -394,7 +390,7 @@ class S3tests_java(Task):
         log.info("S3 Tests Java: Deleting users...")
         testdir = teuthology.get_testdir(self.ctx)
         for section, user in self.users.items():
-            userid = '{user}.{client}'.format(user=user, client=client)
+            s3_user_id = '{user}.{client}'.format(user=user, client=client)
             self.ctx.cluster.only(client).run(
                 args=[
                     'adjust-ulimits',
@@ -403,7 +399,7 @@ class S3tests_java(Task):
                     'radosgw-admin',
                     '-n', client,
                     'user', 'rm',
-                    '--uid', userid,
+                    '--uid', s3_user_id,
                     '--purge-data',
                     '--cluster', 'ceph',
                 ],
