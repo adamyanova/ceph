@@ -20,6 +20,42 @@ from teuthology.orchestra.remote import Remote
 
 log = logging.getLogger(__name__)
 
+"""
+    Task for running RGW S3 tests with the AWS Go SDK
+    
+    Tests run only on clients specified in the s3tests-go config section. 
+    If no client is given a default 'client.0' is chosen.
+    If it does not match the rgw client the task will fail.
+        
+        tasks:
+        - ceph:
+        - rgw: [client.0]
+        - s3tests-go:
+            client.0:
+
+    Extra arguments can be passed by adding options to the corresponding client
+    section under the s3tests-go task (e.g. to run a certain test, 
+    specify a different repository and branch for the test suite, 
+    or forward the test output to a log file):
+
+        tasks:
+        - ceph:
+        - rgw: [client.0]
+        - s3tests-go:
+            client.0:
+                force-branch: wip
+                force-repo: 'https://github.com/adamyanova/go_s3tests.git'
+                log-fwd: '../s3tests-go.log'
+                extra-args: ['-run', 'TestSuite/TestSSEKMS']
+
+    To run a specific test or tests with names containing an expresssing, provide the expression to the extra-args section e.g.:
+
+        - s3tests-go:
+            client.0:
+                extra-args: ['-run', 'TestSuite/TestSSEKMS']
+    
+"""
+
 
 class S3tests_go(Task):
     """
@@ -52,7 +88,6 @@ class S3tests_go(Task):
     def begin(self):
         super(S3tests_go, self).begin()
         log.debug('S3 Tests GO: BEGIN')
-        log.debug('S3 Tests GO: ctx is: {ctx}'.format(ctx=self.ctx))
         for (host, roles) in self.ctx.cluster.remotes.iteritems():
             log.debug(
                 'S3 Tests GO: Cluster config is: {cfg}'.format(cfg=roles))
@@ -98,7 +133,7 @@ class S3tests_go(Task):
 
     def install_required_packages(self, client):
         """
-        Run bootstrap script to install golang.
+        Run bootstrap.sh script to install golang.
         """
         log.info("S3 Tests GO: Installing required packages...")
         testdir = teuthology.get_testdir(self.ctx)
@@ -107,13 +142,11 @@ class S3tests_go(Task):
             stdout=StringIO()
         )
         remote_user = teuthology.get_test_user()
-        log.debug("S3 Tests GO: Remote user is {remote}".format(remote=remote_user))
         self.gopath = '/home/{remote}/go'.format(remote=remote_user)
         self._setup_golang(client)
         self._install_tests_pkgs(client)
 
     def _setup_golang(self, client):
-        log.info("S3 Tests Go: Setting up golang...")
         self.ctx.cluster.only(client).run(
             args = ['mkdir', '-p',
                 self.gopath,
@@ -124,7 +157,6 @@ class S3tests_go(Task):
             )
 
     def _install_tests_pkgs(self, client):
-        log.info("S3 Tests Go: Installing tests dependencies...")
         testdir = teuthology.get_testdir(self.ctx)
         # explicit download of stretchr/testify is required
         self.ctx.cluster.only(client).run(
@@ -159,7 +191,7 @@ class S3tests_go(Task):
                 host=endpoint.hostname, tdir=testdir, remote=remote_user, local=local_user))
             s3tests_conf = teuthology.config_file(
                 '/home/{local}/s3tests.teuth.config.yaml'.format(local=local_user))
-            log.info("S3 Tests GO: s3tests_conf is {s3cfg}".format(
+            log.debug("S3 Tests GO: s3tests_conf is {s3cfg}".format(
                 s3cfg=s3tests_conf))
             self._s3tests_cfg_default_section(client = client, cfg_dict = s3tests_conf)
             for section, user in self.users.items():
@@ -186,7 +218,6 @@ class S3tests_go(Task):
                         '--email', s3tests_conf[section]['email'],
                         '--cluster', cluster_name,
                     ]
-                    log.info('{args}'.format(args=args))
                     self.ctx.cluster.only(client).run(
                         args=args,
                         stdout=StringIO()
@@ -198,7 +229,6 @@ class S3tests_go(Task):
                 "rm -rf /home/{local}/s3tests.teuth.config.yaml".format(local=local_user))
 
     def _s3tests_cfg_default_section(self, client, cfg_dict):
-        log.info("S3 Tests Go: Add DEFAULT section")
         endpoint = self.ctx.rgw.role_endpoints.get(client)
         assert endpoint, 'S3 Tests Go: No RGW endpoint for {clt}'.format(clt = client) 
 
@@ -235,11 +265,6 @@ class S3tests_go(Task):
         self._set_cfg_entry(s3tests_conf[section], 'port', endpoint.port)
         self._set_cfg_entry(
             s3tests_conf[section], 'is_secure', True if endpoint.cert else False)
-
-        log.info("S3 Tests GO: s3tests_conf[{sect}] is {s3cfg}".format(
-            sect=section, s3cfg=s3tests_conf[section]))
-        log.debug('S3 Tests GO: Setion, User = {sect}, {user}'.format(
-            sect=section, user=user))
 
     def _write_cfg_file(self, cfg_dict, client):
         """
@@ -324,7 +349,7 @@ class S3tests_go(Task):
         if self.log_fwd:
             self.ctx.cluster.only(client).run(
                 args=['cd',
-                        '{tdir}/s3-tests-java'.format(tdir=testdir),
+                        '{tdir}/s3-tests-go'.format(tdir=testdir),
                         run.Raw('&&'),
                         'cat', self.log_name,
                         run.Raw('&&'),
@@ -361,6 +386,5 @@ class S3tests_go(Task):
                 ],
                 stdout=StringIO()
             )
-
 
 task = S3tests_go
