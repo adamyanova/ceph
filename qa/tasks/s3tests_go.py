@@ -304,15 +304,17 @@ class S3tests_go(Task):
                     'go', 'test', '-v'
                     ]
             extra_args = []
+            self.log_fwd = False
             if client in self.config and self.config[client] is not None:
                 if 'extra-args' in self.config[client]:
                     extra_args.extend(self.config[client]['extra-args'])
                 if 'log-fwd' in self.config[client]:
-                    log_name = '{tdir}/s3tests-go-log.txt'.format(tdir=testdir)
+                    self.log_fwd = True
+                    self.log_name = '{tdir}/s3tests-go-log.txt'.format(tdir=testdir)
                     if self.config[client]['log-fwd'] is not None:
-                        log_name = self.config[client]['log-fwd']
+                        self.log_name = self.config[client]['log-fwd']
                     extra_args += [run.Raw('>>'),
-                            log_name]
+                            self.log_name]
 
             for i in range(2):
                 self.ctx.cluster.only(client).run(
