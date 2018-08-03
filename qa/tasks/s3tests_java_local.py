@@ -97,19 +97,23 @@ class S3tests_java_local(Task):
                     ],
                 )
 
-            if 'debug' in self.config[client]:
-                self.ctx.cluster.only(client).run(
-                    args=['mkdir', '-p',
-                          '{tdir}/s3-tests-java/src/main/resources/'.format(
-                              tdir=testdir),
-                          run.Raw('&&'),
-                          'cp',
-                          '{tdir}/s3-tests-java/log4j.properties'.format(
-                              tdir=testdir),
-                          '{tdir}/s3-tests-java/src/main/resources/'.format(
-                              tdir=testdir)
-                          ]
-                )
+            if 'log-level' in self.config[client]:
+                if self.config[client]['log-level'] == 'info':
+                    self.ctx.cluster.only(client).run(
+                        args=[
+                            'sed', '-i', 's/log4j.rootLogger=WARN/log4j.rootLogger=INFO/g',
+                            '{tdir}/s3-tests-java/src/main/resources/log4j.properties'.format(
+                                tdir=testdir)
+                        ]
+                    )
+                if self.config[client]['log-level'] == 'debug':
+                    self.ctx.cluster.only(client).run(
+                        args=[
+                            'sed', '-i', 's/log4j.rootLogger=WARN/log4j.rootLogger=DEBUG/g',
+                            '{tdir}/s3-tests-java/src/main/resources/log4j.properties'.format(
+                                tdir=testdir)
+                        ]
+                    )
 
     def install_required_packages(self, client):
         log.info("S3 Tests Java Local: Installing required packages...")
@@ -273,7 +277,7 @@ class S3tests_java_local(Task):
                 if 'extra-args' in self.config[client]:
                     extra_args.extend(self.config[client]['extra-args'])
                     suppress_groups = True
-                if 'debug' in self.config[client]:
+                if 'log-level' in self.config[client] and self.config[client]['log-level'] == 'debug':
                     extra_args += ['--debug']
                 if 'log-fwd' in self.config[client]:
                     log_fwd = True
@@ -289,14 +293,12 @@ class S3tests_java_local(Task):
                 test_groups = ['All']
 
             for gr in test_groups:
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
+                for i in range(2):
+                    self.ctx.cluster.only(client).run(
+                        args=['radosgw-admin', 'gc',
+                              'process', '--include-all'],
+                        stdout=StringIO()
+                    )
                 if gr is not 'All':
                     self.ctx.cluster.only(client).run(
                         args=args + ['--tests'] + [gr] + extra_args,
@@ -307,14 +309,12 @@ class S3tests_java_local(Task):
                         args=args + extra_args,
                         stdout=StringIO()
                     )
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
-                self.ctx.cluster.only(client).run(
-                    args=['radosgw-admin', 'gc', 'process', '--include-all'],
-                    stdout=StringIO()
-                )
+                for i in range(2):
+                    self.ctx.cluster.only(client).run(
+                        args=['radosgw-admin', 'gc',
+                              'process', '--include-all'],
+                        stdout=StringIO()
+                    )
 
                 if log_fwd:
                     self.ctx.cluster.only(client).run(
