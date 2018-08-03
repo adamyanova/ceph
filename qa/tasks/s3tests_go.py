@@ -104,10 +104,10 @@ class S3tests_go(Task):
         branch = 'master'
         repo = 'https://github.com/ceph/go_s3tests.git'
         if client in self.config and self.config[client] is not None:
-            if 'force-branch' in self.config[client] and self.config[client]['branch'] is not None:
-                branch = self.config[client]['branch']
-            if 'force-repo' in self.config[client] and self.config[client]['repo'] is not None:
-                repo = self.config[client]['repo']
+            if 'force-branch' in self.config[client] and self.config[client]['force-branch'] is not None:
+                branch = self.config[client]['force-branch']
+            if 'force-repo' in self.config[client] and self.config[client]['force-repo'] is not None:
+                repo = self.config[client]['force-repo']
         self.ctx.cluster.only(client).run(
             args=[
                 'git', 'clone',
