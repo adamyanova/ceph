@@ -88,10 +88,6 @@ class S3tests_go(Task):
     def begin(self):
         super(S3tests_go, self).begin()
         log.debug('S3 Tests GO: BEGIN')
-        for (host, roles) in self.ctx.cluster.remotes.iteritems():
-            log.debug(
-                'S3 Tests GO: Cluster config is: {cfg}'.format(cfg=roles))
-            log.debug('S3 Tests GO: Host is: {host}'.format(host=host))
         self.create_users()
         self.run_tests()
 
@@ -179,26 +175,20 @@ class S3tests_go(Task):
         and missing information is added from the task.
         Existing values are NOT overriden unless they are empty!
         """
-        log.info("S3 Tests GO: Creating users...")
+        log.info("S3 Tests GO: Creating S3 users...")
         testdir = teuthology.get_testdir(self.ctx)
         for client in self.all_clients:
             endpoint = self.ctx.rgw.role_endpoints.get(client)
             local_user = getpass.getuser()
             remote_user = teuthology.get_test_user()
-            log.info("S3 Tests GO: username is: {username}".format(
-                username=local_user))
             os.system("scp {remote}@{host}:{tdir}/s3-tests-go/s3tests.teuth.config.yaml /home/{local}/".format(
                 host=endpoint.hostname, tdir=testdir, remote=remote_user, local=local_user))
             s3tests_conf = teuthology.config_file(
                 '/home/{local}/s3tests.teuth.config.yaml'.format(local=local_user))
-            log.debug("S3 Tests GO: s3tests_conf is {s3cfg}".format(
-                s3cfg=s3tests_conf))
             self._s3tests_cfg_default_section(client = client, cfg_dict = s3tests_conf)
             for section, user in self.users.items():
                 if section in s3tests_conf:
                     s3_user_id = '{user}.{client}'.format(user=user, client=client)
-                    log.debug(
-                        'S3 Tests GO: Creating user {s3_user_id}'.format(s3_user_id=s3_user_id))
                     self._config_user(s3tests_conf=s3tests_conf,
                                       section=section, user=s3_user_id, client=client)
                     cluster_name, daemon_type, client_id = teuthology.split_role(
@@ -368,7 +358,7 @@ class S3tests_go(Task):
         )
 
     def delete_users(self, client):
-        log.info("S3 Tests GO: Deleting users...")
+        log.info("S3 Tests GO: Deleting S3 users...")
         testdir = teuthology.get_testdir(self.ctx)
         for section, user in self.users.items():
             userid = '{user}.{client}'.format(user=user, client=client)
