@@ -84,7 +84,7 @@ def download(ctx, config):
         ctx.cluster.only(client).run(
             args=[
                 'git', 'clone',
-                '-b', cconf.get('force-branch', 'master'),
+                '-b', cconf.get('force-branch', 'stable/queens'),
                 'https://github.com/openstack/keystone.git',
                 keystonedir,
                 ],
