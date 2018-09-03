@@ -282,7 +282,7 @@ class S3tests_java_local(Task):
                 if 'log-fwd' in self.config[client]:
                     log_fwd = True
                     log_name = '{tdir}/s3tests_log.txt'.format(tdir=testdir)
-                    if self.config[client]['log-fwd'] is not None:
+                    if self.config[client]['log_fwd'] is not None:
                         log_name = self.config[client]['log-fwd']
                     extra_args += [run.Raw('>>'),
                                    log_name]
