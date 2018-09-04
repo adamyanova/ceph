@@ -60,6 +60,9 @@ GTAGS
 /build
 /build.*
 
+/bin
+/.vscode
+.project
 # editor backup files etc.
 \#*\#
 
