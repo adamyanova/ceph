@@ -153,9 +153,12 @@ def configure_instance(ctx, config):
     for (client, _) in config.items():
         # prepare the config file
         run_in_keystone_dir(ctx, client,
-                            [
+                            ['source',
+                             '{tvdir}/bin/activate'.format(
+                                 tvdir=get_toxvenv_dir(ctx)),
+                                run.Raw('&&'),
                                 'tox', '-e', 'genconfig'
-                            ])
+                             ])
         run_in_keystone_dir(ctx, client,
                             [
                                 'cp', '-f',
@@ -187,9 +190,12 @@ def configure_instance(ctx, config):
         run_in_keystone_venv(ctx, client,
                              ['keystone-manage', 'bootstrap',
                               '--bootstrap-password', "ADMIN",
-                              '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(host=admin_host),
-                              '--bootstrap-internal-url', 'http:{host}:5000/v3/'.format(host=admin_host),
-                              '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(host=admin_host),
+                              '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
+                                  host=admin_host),
+                              '--bootstrap-internal-url', 'http:{host}:5000/v3/'.format(
+                                  host=admin_host),
+                              '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
+                                  host=admin_host),
                               '--bootstrap-region-id RegionOne'])
 
     yield
