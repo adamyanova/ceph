@@ -29,7 +29,7 @@ def install_packages(ctx, config):
 
     deps = {
         'deb': ['libffi-dev', 'libssl-dev', 'libldap2-dev', 'libsasl2-dev', 'python-dev'],
-        'rpm': ['libffi-devel', 'openssl-devel', 'python3-devel'],
+        'rpm': ['libffi-devel', 'openssl-devel', 'python34-devel'],
     }
     for (client, _) in config.items():
         (remote,) = ctx.cluster.only(client).remotes.iterkeys()
