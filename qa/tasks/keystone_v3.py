@@ -196,7 +196,7 @@ def configure_instance(ctx, config):
                                   host=admin_host),
                               '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
                                   host=admin_host),
-                              '--bootstrap-region-id RegionOne'])
+                              '--bootstrap-region-id', 'RegionOne'])
 
     yield
 
