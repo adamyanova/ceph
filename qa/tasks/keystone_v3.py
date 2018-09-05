@@ -182,22 +182,34 @@ def configure_instance(ctx, config):
         # prepare key repository for Fetnet token authenticator
         run_in_keystone_dir(ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(ctx, client, ['keystone-manage', 'fernet_setup'])
+        run_in_keystone_venv(ctx, client, ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys',
+                                           run.Raw('&&'),
+                                           'cp', '-r', '{kdir}/etc/fernet-keys/*', '/etc/keystone/fernet-keys/'
+                                            ]
+
 
         # sync database
         run_in_keystone_venv(ctx, client, ['keystone-manage', 'db_sync'])
 
-        admin_host, admin_port = ctx.keystone.admin_endpoints[client]
+        admin_host, admin_port=ctx.keystone.admin_endpoints[client]
         run_in_keystone_venv(ctx, client,
                              ['keystone-manage', 'bootstrap',
                               '--bootstrap-password', "ADMIN",
+                              '--bootstrap-username', 'admin',
+                              '--bootstrap-project-name', 'admin',
+                              '--bootstrap-role-name', 'admin',
+                              '--bootstrap-service-name', 'keystone',
+                              '--bootstrap-region-id', 'RegionOne',
                               '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
                                   host=admin_host),
                               '--bootstrap-internal-url', 'http:{host}:5000/v3/'.format(
                                   host=admin_host),
                               '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
                                   host=admin_host),
-                              '--bootstrap-region-id', 'RegionOne'])
+                              ])
 
+
+/ etc/keystone/fernet-keys /
     yield
 
 
@@ -207,15 +219,15 @@ def run_keystone(ctx, config):
     log.info('Configuring keystone...')
 
     for (client, _) in config.items():
-        (remote,) = ctx.cluster.only(client).remotes.iterkeys()
-        cluster_name, _, client_id = teuthology.split_role(client)
+        (remote,)=ctx.cluster.only(client).remotes.iterkeys()
+        cluster_name, _, client_id=teuthology.split_role(client)
 
         # start the public endpoint
-        client_public_with_id = 'keystone.public' + '.' + client_id
-        client_public_with_cluster = cluster_name + '.' + client_public_with_id
+        client_public_with_id='keystone.public' + '.' + client_id
+        client_public_with_cluster=cluster_name + '.' + client_public_with_id
 
-        public_host, public_port = ctx.keystone.public_endpoints[client]
-        run_cmd = get_keystone_venved_cmd(ctx, 'keystone-wsgi-public',
+        public_host, public_port=ctx.keystone.public_endpoints[client]
+        run_cmd=get_keystone_venved_cmd(ctx, 'keystone-wsgi-public',
                                           ['--host', public_host, '--port', str(public_port),
                                            # Let's put the Keystone in background, wait for EOF
                                            # and after receiving it, send SIGTERM to the daemon.
@@ -237,10 +249,10 @@ def run_keystone(ctx, config):
         )
 
         # start the admin endpoint
-        client_admin_with_id = 'keystone.admin' + '.' + client_id
+        client_admin_with_id='keystone.admin' + '.' + client_id
 
-        admin_host, admin_port = ctx.keystone.admin_endpoints[client]
-        run_cmd = get_keystone_venved_cmd(ctx, 'keystone-wsgi-admin',
+        admin_host, admin_port=ctx.keystone.admin_endpoints[client]
+        run_cmd=get_keystone_venved_cmd(ctx, 'keystone-wsgi-admin',
                                           ['--host', admin_host, '--port', str(admin_port),
                                            run.Raw('& { read; kill %1; }')
                                            ]
@@ -277,10 +289,10 @@ def dict_to_args(special, items):
     into:
         [ '--key1', 'val1', '--key3', 'val3', 'val_special' ]
     """
-    args = []
+    args=[]
     for (k, v) in items:
         if k == special:
-            special_val = v
+            special_val=v
         else:
             args.append('--{k}'.format(k=k))
             args.append(v)
@@ -291,9 +303,9 @@ def dict_to_args(special, items):
 
 def run_section_cmds(ctx, cclient, section_cmd, special,
                      section_config_list):
-    admin_host, admin_port = ctx.keystone.admin_endpoints[cclient]
+    admin_host, admin_port=ctx.keystone.admin_endpoints[cclient]
 
-    auth_section = [
+    auth_section=[
         ('os-token', 'ADMIN'),
         ('os-url', 'http://{host}:{port}/v3'.format(host=admin_host,
                                                     port=admin_port)),
@@ -306,7 +318,7 @@ def run_section_cmds(ctx, cclient, section_cmd, special,
 
 
 def create_endpoint(ctx, cclient, service, url):
-    endpoint_section = {
+    endpoint_section={
         'service': service,
         'publicurl': url,
     }
@@ -331,12 +343,12 @@ def fill_keystone(ctx, config):
         run_section_cmds(ctx, cclient, 'service create', 'name',
                          cconfig['services'])
 
-        public_host, public_port = ctx.keystone.public_endpoints[cclient]
-        url = 'http://{host}:{port}/v2.0'.format(host=public_host,
+        public_host, public_port=ctx.keystone.public_endpoints[cclient]
+        url='http://{host}:{port}/v2.0'.format(host=public_host,
                                                  port=public_port)
         create_endpoint(ctx, cclient, 'keystone', url)
         # for the deferred endpoint creation; currently it's used in rgw.py
-        ctx.keystone.create_endpoint = create_endpoint
+        ctx.keystone.create_endpoint=create_endpoint
 
         # sleep driven synchronization -- just in case
         run_in_keystone_venv(ctx, cclient, ['sleep', '3'])
@@ -350,12 +362,12 @@ def assign_ports(ctx, config, initial_port):
     """
     Assign port numbers starting from @initial_port
     """
-    port = initial_port
-    role_endpoints = {}
+    port=initial_port
+    role_endpoints={}
     for remote, roles_for_host in ctx.cluster.remotes.iteritems():
         for role in roles_for_host:
             if role in config:
-                role_endpoints[role] = (remote.name.split('@')[1], port)
+                role_endpoints[role]=(remote.name.split('@')[1], port)
                 port += 1
 
     return role_endpoints
@@ -402,18 +414,18 @@ def task(ctx, config):
     if not ctx.tox:
         raise ConfigError('keystone must run  after the tox task')
 
-    all_clients = ['client.{id}'.format(id=id_)
+    all_clients=['client.{id}'.format(id=id_)
                    for id_ in teuthology.all_roles_of_type(ctx.cluster, 'client')]
     if config is None:
-        config = all_clients
+        config=all_clients
     if isinstance(config, list):
-        config = dict.fromkeys(config)
+        config=dict.fromkeys(config)
 
     log.debug('Keystone config is %s', config)
 
-    ctx.keystone = argparse.Namespace()
-    ctx.keystone.public_endpoints = assign_ports(ctx, config, 5000)
-    ctx.keystone.admin_endpoints = assign_ports(ctx, config, 35357)
+    ctx.keystone=argparse.Namespace()
+    ctx.keystone.public_endpoints=assign_ports(ctx, config, 5000)
+    ctx.keystone.admin_endpoints=assign_ports(ctx, config, 35357)
 
     with contextutil.nested(
         lambda: install_packages(ctx=ctx, config=config),
