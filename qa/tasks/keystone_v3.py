@@ -185,7 +185,7 @@ def configure_instance(ctx, config):
         run_in_keystone_venv(ctx, client, ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys',
                                            run.Raw('&&'),
                                            'cp', '-r', '{kdir}/etc/fernet-keys/*', '/etc/keystone/fernet-keys/'
-                                            ]
+                                            ])
 
 
         # sync database
