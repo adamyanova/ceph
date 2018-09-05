@@ -182,10 +182,10 @@ def configure_instance(ctx, config):
         # prepare key repository for Fetnet token authenticator
         run_in_keystone_dir(ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(ctx, client, ['keystone-manage', 'fernet_setup'])
-        run_in_keystone_venv(ctx, client, ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys',
-                                           run.Raw('&&'),
-                                           'cp', '-r', '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/'
-                                            ])
+        # run_in_keystone_venv(ctx, client, ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys',
+        #                                    run.Raw('&&'),
+        #                                    'cp', '-r', '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/'
+        #                                     ])
 
         # sync database
         run_in_keystone_venv(ctx, client, ['keystone-manage', 'db_sync'])
