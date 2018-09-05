@@ -207,9 +207,6 @@ def configure_instance(ctx, config):
                               '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
                                   host=admin_host),
                               ])
-
-
-/ etc/keystone/fernet-keys /
     yield
 
 
