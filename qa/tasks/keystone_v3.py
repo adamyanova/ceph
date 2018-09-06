@@ -27,6 +27,9 @@ class Keystone_v3(Task):
 
     def __init__(self, ctx, config):
         super(Keystone_v3, self).__init__(ctx, config)
+        ctx.keystone = argparse.Namespace()
+        ctx.keystone.public_endpoints = assign_ports(ctx, config, 5000)
+        ctx.keystone.admin_endpoints = assign_ports(ctx, config, 35357)
 
     def setup(self):
         super(Keystone_v3, self).setup()
@@ -203,6 +206,20 @@ class Keystone_v3(Task):
                               '--description',
                               "Demo Project", 'demo'
                               ])
+
+def assign_ports(ctx, config, initial_port):
+    """
+    Assign port numbers starting from @initial_port
+    """
+    port = initial_port
+    role_endpoints = {}
+    for remote, roles_for_host in ctx.cluster.remotes.iteritems():
+        for role in roles_for_host:
+            if role in config:
+                role_endpoints[role] = (remote.name.split('@')[1], port)
+                port += 1
+
+    return role_endpoints
 
 
 def get_keystone_dir(ctx):
