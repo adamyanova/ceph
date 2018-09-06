@@ -49,9 +49,9 @@ class Keystone_v3(Task):
         log.info('End keystone task...')
         for (client, _) in self.config.items():
             run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'systemctl', 'stop', 'httpd.service'])
+                                 ['sudo', 'systemctl', 'stop', 'httpd.service'])
             run_in_keystone_venv(self.ctx, client,
-                        ['sudo', 'service', 'mariadb', 'stop'])
+                                 ['sudo', 'service', 'mariadb', 'stop'])
 
     def install_packages(self, client):
         """
@@ -154,7 +154,11 @@ class Keystone_v3(Task):
         run_in_keystone_venv(self.ctx, client,
                              ['sudo', 'service', 'mariadb', 'start'])
         # TODO: make sure mariadb service is running
-        mdbargs="CREATE DATABASE keystone; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\'; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\';"
+        mdbargs = "CREATE DATABASE keystone;" + \
+            "GRANT ALL PRIVILEGES ON keystone.* " + \
+            "TO \'keystone\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\';" + \
+            "GRANT ALL PRIVILEGES ON keystone.* " + \
+            "TO \'keystone\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\';"
         run_in_keystone_venv(self.ctx, client,
                              ['mysql', '-u', 'root', '-e',
                               mdbargs
@@ -194,6 +198,60 @@ class Keystone_v3(Task):
     def run_keystone(self, client):
         log.info('Run keystone...')
 
+        (remote,)=self.ctx.cluster.only(client).remotes.iterkeys()
+        cluster_name, _, client_id=teuthology.split_role(client)
+
+        # start the public endpoint
+        client_public_with_id='keystone.public' + '.' + client_id
+        client_public_with_cluster=cluster_name + '.' + client_public_with_id
+
+        public_host, public_port=self.ctx.keystone.public_endpoints[client]
+        run_cmd=get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-public',
+                                          ['--host', public_host, '--port', str(public_port),
+                                           # Let's put the Keystone in background, wait for EOF
+                                           # and after receiving it, send SIGTERM to the daemon.
+                                           # This crazy hack is because Keystone, in contrast to
+                                           # our other daemons, doesn't quit on stdin.close().
+                                           # Teuthology relies on this behaviour.
+                                           run.Raw('& { read; kill %1; }')
+                                           ]
+                                          )
+        self.ctx.daemons.add_daemon(
+            remote, 'keystone', client_public_with_id,
+            cluster=cluster_name,
+            args=run_cmd,
+            logger=log.getChild(client),
+            stdin=run.PIPE,
+            cwd=get_keystone_dir(self.ctx),
+            wait=False,
+            check_status=False,
+        )
+
+        # start the admin endpoint
+        client_admin_with_id='keystone.admin' + '.' + client_id
+
+        admin_host, admin_port=self.ctx.keystone.admin_endpoints[client]
+        run_cmd=get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-admin',
+                                          ['--host', admin_host, '--port', str(admin_port),
+                                           run.Raw('& { read; kill %1; }')
+                                           ]
+                                          )
+        self.ctx.daemons.add_daemon(
+            remote, 'keystone', client_admin_with_id,
+            cluster=cluster_name,
+            args=run_cmd,
+            logger=log.getChild(client),
+            stdin=run.PIPE,
+            cwd=get_keystone_dir(self.ctx),
+            wait=False,
+            check_status=False,
+        )
+
+        # sleep driven synchronization
+        run_in_keystone_venv(self.ctx, client, ['sleep', '15'])
+    
+
+
         run_in_keystone_venv(self.ctx, client,
                              ['openstack', 'project', 'create',
                               '--domain', 'default',
@@ -206,6 +264,7 @@ class Keystone_v3(Task):
                               '--description',
                               "Demo Project", 'demo'
                               ])
+
 
 def assign_ports(ctx, config, initial_port):
     """
@@ -247,5 +306,6 @@ def get_keystone_venved_cmd(ctx, cmd, args):
 
 def get_toxvenv_dir(ctx):
     return ctx.tox.venv_path
+
 
 task = Keystone_v3
