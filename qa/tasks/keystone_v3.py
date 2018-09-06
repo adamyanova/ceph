@@ -121,9 +121,10 @@ class Keystone_v3(Task):
         run_in_keystone_venv(self.ctx, client,
                              ['sudo', 'service', 'mariadb', 'start'])
         # TODO: make sure mariadb service is running
+        mdbargs="CREATE DATABASE keystone; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\'; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\';"
         run_in_keystone_venv(self.ctx, client,
                              ['mysql', '-u', 'root', '-e',
-                              "CREATE DATABASE keystone; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\'; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\'; exit"
+                              mdbargs
                               ])
         # start httpd
         run_in_keystone_venv(self.ctx, client,
