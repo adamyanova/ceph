@@ -26,7 +26,7 @@ class Keystone_v3(Task):
     """
 
     def __init__(self, ctx, config):
-        super(Keystone_v3, self).__init__(self.ctx, config)
+        super(Keystone_v3, self).__init__(ctx, config)
 
     def setup(self):
         super(Keystone_v3, self).setup()
