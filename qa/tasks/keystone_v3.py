@@ -117,21 +117,6 @@ class Keystone_v3(Task):
     def configure_instance(self, client):
         log.info('Configuring keystone...')
 
-        # setup MariaDB
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'service', 'mariadb', 'start'])
-        # TODO: make sure mariadb service is running
-        mdbargs="CREATE DATABASE keystone; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\'; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\';"
-        run_in_keystone_venv(self.ctx, client,
-                             ['mysql', '-u', 'root', '-e',
-                              mdbargs
-                              ])
-        # start httpd
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'systemctl', 'enable', 'httpd.service'])
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'systemctl', 'start', 'httpd.service'])
-
         keyrepo_dir = '{kdir}/etc/fernet-keys'.format(
             kdir=get_keystone_dir(self.ctx))
         # prepare the config file
@@ -162,6 +147,16 @@ class Keystone_v3(Task):
                                 '-i', 'etc/keystone.conf'
                             ])
 
+        # setup MariaDB
+        run_in_keystone_venv(self.ctx, client,
+                             ['sudo', 'service', 'mariadb', 'start'])
+        # TODO: make sure mariadb service is running
+        mdbargs="CREATE DATABASE keystone; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\'; GRANT ALL PRIVILEGES ON keystone.* TO \'keystone\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\';"
+        run_in_keystone_venv(self.ctx, client,
+                             ['mysql', '-u', 'root', '-e',
+                              mdbargs
+                              ])
+
         # prepare key repository for Fetnet token authenticator
         run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(self.ctx, client, [
@@ -186,6 +181,12 @@ class Keystone_v3(Task):
                               '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
                                   host=admin_host),
                               ])
+
+        # start httpd
+        run_in_keystone_venv(self.ctx, client,
+                             ['sudo', 'systemctl', 'enable', 'httpd.service'])
+        run_in_keystone_venv(self.ctx, client,
+                             ['sudo', 'systemctl', 'start', 'httpd.service'])
 
     def run_keystone(self, client):
         log.info('Run keystone...')
