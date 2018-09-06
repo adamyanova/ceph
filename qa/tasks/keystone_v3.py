@@ -233,3 +233,5 @@ def get_keystone_venved_cmd(ctx, cmd, args):
 
 def get_toxvenv_dir(ctx):
     return ctx.tox.venv_path
+
+task = Keystone_v3
