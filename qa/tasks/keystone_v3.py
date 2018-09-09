@@ -177,13 +177,9 @@ class Keystone_v3(Task):
         # prepare key repository for Fetnet token authenticator
         run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', 'fernet_setup',
-                              '--keystone-user', 'keystone',
-                              '--keystone-group', 'keystone'])
+                             ['keystone-manage', 'fernet_setup')
         run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', 'credential_setup',
-                              '--keystone-user', 'keystone',
-                              '--keystone-group', 'keystone'])
+                             ['keystone-manage', 'credential_setup')
 
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'bootstrap',
@@ -200,12 +196,6 @@ class Keystone_v3(Task):
                               '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
                                   host=admin_host),
                               ])
-
-        # start httpd
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'systemctl', 'enable', 'httpd.service'])
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'systemctl', 'start', 'httpd.service'])
 
     def run_keystone(self, client):
         log.info('Run keystone...')
@@ -262,6 +252,15 @@ class Keystone_v3(Task):
         # sleep driven synchronization
         run_in_keystone_venv(self.ctx, client, ['sleep', '15'])
 
+
+        # # start httpd
+        # run_in_keystone_venv(self.ctx, client,
+        #                      ['sudo', 'systemctl', 'enable', 'httpd.service'])
+        # run_in_keystone_venv(self.ctx, client,
+        #                      ['sudo', 'systemctl', 'start', 'httpd.service'])
+
+
+
         run_in_keystone_venv(self.ctx, client,
                              ['openstack', 'project', 'create',
                               '--domain', 'default',
@@ -274,6 +273,8 @@ class Keystone_v3(Task):
                               '--description',
                               "Demo Project", 'demo'
                               ])
+
+        
 
 
 def assign_ports(ctx, config, initial_port):
