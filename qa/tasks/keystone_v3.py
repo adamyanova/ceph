@@ -64,7 +64,8 @@ class Keystone_v3(Task):
         self.deps = {
             # TODO: add mariadb packages for debian
             'deb': ['libffi-dev', 'libssl-dev', 'libldap2-dev', 'libsasl2-dev', 'python-dev'],
-            'rpm': ['libffi-devel', 'openssl-devel', 'python34-devel', 'mariadb', 'mariadb-server'],
+            'rpm': ['libffi-devel', 'openssl-devel', 'python34-devel', 'mariadb', 'mariadb-server',
+                    'httpd', 'mod_wsgi', ],
         }
         (remote,) = self.ctx.cluster.only(client).remotes.iterkeys()
         for dep in self.deps[remote.os.package_type]:
@@ -120,6 +121,8 @@ class Keystone_v3(Task):
     def configure_instance(self, client):
         log.info('Configuring keystone...')
 
+        admin_host, admin_port = self.ctx.keystone.admin_endpoints[client]
+
         keyrepo_dir = '{kdir}/etc/fernet-keys'.format(
             kdir=get_keystone_dir(self.ctx))
         # prepare the config file
@@ -149,6 +152,11 @@ class Keystone_v3(Task):
                                     kr=keyrepo_dir),
                                 '-i', 'etc/keystone.conf'
                             ])
+        run_in_keystone_venv(self.ctx, client,
+                             ['sudo', 'sed', '-i',
+                              's%^#*ServerName.*%&\nServerName {host}%'.format(
+                                  host=admin_host),
+                              '/etc/httpd/conf/httpd.conf'])
 
         # setup MariaDB
         run_in_keystone_venv(self.ctx, client,
@@ -164,15 +172,20 @@ class Keystone_v3(Task):
                               mdbargs
                               ])
 
-        # prepare key repository for Fetnet token authenticator
-        run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
-        run_in_keystone_venv(self.ctx, client, [
-                             'keystone-manage', 'fernet_setup'])
-
         # sync database
         run_in_keystone_venv(self.ctx, client, ['keystone-manage', 'db_sync'])
+        
+        # prepare key repository for Fetnet token authenticator
+        run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
+        run_in_keystone_venv(self.ctx, client,
+                             ['keystone-manage', 'fernet_setup',
+                              '--keystone-user', 'keystone',
+                              '--keystone-group', 'keystone'])
+        run_in_keystone_venv(self.ctx, client,
+                             ['keystone-manage', 'credential_setup', 
+                            '--keystone-user', 'keystone', 
+                            '--keystone-group', 'keystone']) 
 
-        admin_host, admin_port = self.ctx.keystone.admin_endpoints[client]
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'bootstrap',
                               '--bootstrap-password', "ADMIN",
@@ -198,15 +211,15 @@ class Keystone_v3(Task):
     def run_keystone(self, client):
         log.info('Run keystone...')
 
-        (remote,)=self.ctx.cluster.only(client).remotes.iterkeys()
-        cluster_name, _, client_id=teuthology.split_role(client)
+        (remote,) = self.ctx.cluster.only(client).remotes.iterkeys()
+        cluster_name, _, client_id = teuthology.split_role(client)
 
         # start the public endpoint
-        client_public_with_id='keystone.public' + '.' + client_id
-        client_public_with_cluster=cluster_name + '.' + client_public_with_id
+        client_public_with_id = 'keystone.public' + '.' + client_id
+        client_public_with_cluster = cluster_name + '.' + client_public_with_id
 
-        public_host, public_port=self.ctx.keystone.public_endpoints[client]
-        run_cmd=get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-public',
+        public_host, public_port = self.ctx.keystone.public_endpoints[client]
+        run_cmd = get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-public',
                                           ['--host', public_host, '--port', str(public_port),
                                            # Let's put the Keystone in background, wait for EOF
                                            # and after receiving it, send SIGTERM to the daemon.
@@ -228,10 +241,10 @@ class Keystone_v3(Task):
         )
 
         # start the admin endpoint
-        client_admin_with_id='keystone.admin' + '.' + client_id
+        client_admin_with_id = 'keystone.admin' + '.' + client_id
 
-        admin_host, admin_port=self.ctx.keystone.admin_endpoints[client]
-        run_cmd=get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-admin',
+        admin_host, admin_port = self.ctx.keystone.admin_endpoints[client]
+        run_cmd = get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-admin',
                                           ['--host', admin_host, '--port', str(admin_port),
                                            run.Raw('& { read; kill %1; }')
                                            ]
@@ -249,8 +262,6 @@ class Keystone_v3(Task):
 
         # sleep driven synchronization
         run_in_keystone_venv(self.ctx, client, ['sleep', '15'])
-    
-
 
         run_in_keystone_venv(self.ctx, client,
                              ['openstack', 'project', 'create',
