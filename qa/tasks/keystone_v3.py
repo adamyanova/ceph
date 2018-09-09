@@ -177,9 +177,9 @@ class Keystone_v3(Task):
         # prepare key repository for Fetnet token authenticator
         run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', 'fernet_setup')
+                             ['keystone-manage', 'fernet_setup'])
         run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', 'credential_setup')
+                             ['keystone-manage', 'credential_setup'])
 
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'bootstrap',
