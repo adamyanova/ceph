@@ -65,7 +65,7 @@ class Keystone_v3(Task):
             # TODO: add mariadb packages for debian
             'deb': ['libffi-dev', 'libssl-dev', 'libldap2-dev', 'libsasl2-dev', 'python-dev'],
             'rpm': ['libffi-devel', 'openssl-devel', 'python34-devel', 'mariadb', 'mariadb-server',
-                    'httpd', 'mod_wsgi', ],
+                    'python34-PyMySQL', 'httpd', 'mod_wsgi', ],
         }
         (remote,) = self.ctx.cluster.only(client).remotes.iterkeys()
         for dep in self.deps[remote.os.package_type]:
