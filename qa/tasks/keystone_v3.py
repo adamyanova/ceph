@@ -181,6 +181,10 @@ class Keystone_v3(Task):
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'credential_setup'])
 
+
+        run_in_keystone_venv(self.ctx, client,
+                             ['keystone-manage', '--config-dir', '{kdir}/etc'.format(kdir=get_keystone_dir(self.ctx)),
+                             '--config-dir', '{kdir}/etc/keystone.conf'.format(kdir=get_keystone_dir(self.ctx))])
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'bootstrap',
                               '--bootstrap-password', "ADMIN",
