@@ -197,14 +197,14 @@ class Keystone_v3(Task):
                                   host=admin_host),
                               ])
 
+        run_in_keystone_dir(self.ctx, client,
+                        ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/',
+                        run.Raw('&&'),
+                        'sudo', 'cp', '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/']
+                        )
+
     def run_keystone(self, client):
         log.info('Run keystone...')
-
-        run_in_keystone_dir(self.ctx, client,
-                             ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/',
-                              run.Raw('&&'),
-                              'sudo', 'cp', 'etc/fernet-keys/*', '/etc/keystone/fernet-keys/']
-                             )
 
         (remote,) = self.ctx.cluster.only(client).remotes.iterkeys()
         cluster_name, _, client_id = teuthology.split_role(client)
