@@ -181,12 +181,13 @@ class Keystone_v3(Task):
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'credential_setup'])
 
-
         run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', '--config-dir', '{kdir}/etc'.format(kdir=get_keystone_dir(self.ctx)),
-                             '--config-dir', '{kdir}/etc/keystone.conf'.format(kdir=get_keystone_dir(self.ctx))])
-        run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', 'bootstrap',
+                             ['keystone-manage',
+                              '--config-dir', '{kdir}/etc'.format(
+                                  kdir=get_keystone_dir(self.ctx)),
+                              '--config-dir', '{kdir}/etc/keystone.conf'.format(
+                                  kdir=get_keystone_dir(self.ctx)),
+                              'keystone-manage', 'bootstrap',
                               '--bootstrap-password', "ADMIN",
                               '--bootstrap-username', 'admin',
                               '--bootstrap-project-name', 'admin',
@@ -195,21 +196,23 @@ class Keystone_v3(Task):
                               '--bootstrap-region-id', 'RegionOne',
                               '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
                                   host=admin_host),
-                              '--bootstrap-internal-url', 'http:{host}:5000/v3/'.format(
+                              '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
                                   host=admin_host),
                               '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
                                   host=admin_host),
                               ])
 
         run_in_keystone_venv(self.ctx, client,
-                        ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/'])
+                             ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/'])
 
         run_in_keystone_venv(self.ctx, client,
-                        ['sudo', 'cp', '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/']
-                        )
+                             ['sudo', 'cp',
+                                 '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/']
+                             )
         run_in_keystone_venv(self.ctx, client,
-                        ['sudo', 'chown', 'ubuntu', '/etc/keystone/fernet-keys/*']
-                        )
+                             ['sudo', 'chown', 'ubuntu',
+                                 '/etc/keystone/fernet-keys/*']
+                             )
 
     def run_keystone(self, client):
         log.info('Run keystone...')
