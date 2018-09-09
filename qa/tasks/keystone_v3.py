@@ -187,7 +187,6 @@ class Keystone_v3(Task):
                                   kdir=get_keystone_dir(self.ctx)),
                               '--config-dir', '{kdir}/etc/keystone.conf'.format(
                                   kdir=get_keystone_dir(self.ctx)),
-                              'keystone-manage', 'bootstrap',
                               '--bootstrap-password', "ADMIN",
                               '--bootstrap-username', 'admin',
                               '--bootstrap-project-name', 'admin',
