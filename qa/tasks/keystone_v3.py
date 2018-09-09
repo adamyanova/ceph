@@ -197,10 +197,14 @@ class Keystone_v3(Task):
                                   host=admin_host),
                               ])
 
-        run_in_keystone_dir(self.ctx, client,
-                        ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/',
-                        run.Raw('&&'),
-                        'sudo', 'cp', '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/']
+        run_in_keystone_venv(self.ctx, client,
+                        ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/'])
+
+        run_in_keystone_venv(self.ctx, client,
+                        ['sudo', 'cp', '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/']
+                        )
+        run_in_keystone_venv(self.ctx, client,
+                        ['sudo', 'chown', 'ubuntu', '/etc/keystone/fernet-keys/*']
                         )
 
     def run_keystone(self, client):
