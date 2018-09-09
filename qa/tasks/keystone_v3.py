@@ -200,6 +200,12 @@ class Keystone_v3(Task):
     def run_keystone(self, client):
         log.info('Run keystone...')
 
+        run_in_keystone_dir(self.ctx, client,
+                             ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/',
+                              run.Raw('&&'),
+                              'sudo', 'cp', 'etc/fernet-keys/*', '/etc/keystone/fernet-keys/']
+                             )
+
         (remote,) = self.ctx.cluster.only(client).remotes.iterkeys()
         cluster_name, _, client_id = teuthology.split_role(client)
 
@@ -252,14 +258,11 @@ class Keystone_v3(Task):
         # sleep driven synchronization
         run_in_keystone_venv(self.ctx, client, ['sleep', '15'])
 
-
         # # start httpd
         # run_in_keystone_venv(self.ctx, client,
         #                      ['sudo', 'systemctl', 'enable', 'httpd.service'])
         # run_in_keystone_venv(self.ctx, client,
         #                      ['sudo', 'systemctl', 'start', 'httpd.service'])
-
-
 
         run_in_keystone_venv(self.ctx, client,
                              ['openstack', 'project', 'create',
@@ -273,8 +276,6 @@ class Keystone_v3(Task):
                               '--description',
                               "Demo Project", 'demo'
                               ])
-
-        
 
 
 def assign_ports(ctx, config, initial_port):
