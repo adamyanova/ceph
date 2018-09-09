@@ -202,15 +202,15 @@ class Keystone_v3(Task):
                                   host=admin_host),
                               ])
 
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'mkdir', '-p', '/etc/keystone/fernet-keys/'])
+        self.ctx.cluster.only(client).run(
+                             ['sudo', 'mkdir', '-p', '/etc/keystone/'])
 
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'cp',
-                              '{kr}/ets/fernet-keys/*'.format(kr=get_keystone_dir(self.ctx)),
-                              '/etc/keystone/fernet-keys/']
+        self.ctx.cluster.only(client).run(
+                             ['sudo', 'ln', '-s',
+                              '{kr}/etc/fernet-keys'.format(kr=get_keystone_dir(self.ctx)),
+                              '/etc/keystone/']
                              )
-        run_in_keystone_venv(self.ctx, client,
+        self.ctx.cluster.only(client).run(
                              ['sudo', 'chown', 'ubuntu',
                                  '/etc/keystone/fernet-keys/*']
                              )
