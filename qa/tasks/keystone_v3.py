@@ -134,11 +134,10 @@ class Keystone_v3(Task):
                                 'tox', '-e', 'genconfig'
                              ])
         run_in_keystone_dir(self.ctx, client,
-                            [
-                                'cp', '-f',
+                            ['cp', '-f',
                                 'etc/keystone.conf.sample',
                                 'etc/keystone.conf'
-                            ])
+                             ])
         # run_in_keystone_dir(self.ctx, client,
         #                     [
         #                         'sed',
@@ -146,17 +145,17 @@ class Keystone_v3(Task):
         #                         '-i', 'etc/keystone.conf'
         #                     ])
         run_in_keystone_dir(self.ctx, client,
-                            [
-                                'sed',
+                            ['sed',
                                 '-e', 's^#key_repository =.*^key_repository = {kr}^'.format(
                                     kr=keyrepo_dir),
                                 '-i', 'etc/keystone.conf'
-                            ])
+                             ])
         run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'sed', '-i',
-                              's%^#*ServerName.*%&\nServerName {host}%'.format(
+                             ['sudo', 'sed',
+                              '-e', 's^#*ServerName = .*^ServerName {host}^'.format(
                                   host=admin_host),
-                              '/etc/httpd/conf/httpd.conf'])
+                              '-i', '/etc/httpd/conf/httpd.conf'
+                              ])
 
         # setup MariaDB
         run_in_keystone_venv(self.ctx, client,
@@ -174,7 +173,7 @@ class Keystone_v3(Task):
 
         # sync database
         run_in_keystone_venv(self.ctx, client, ['keystone-manage', 'db_sync'])
-        
+
         # prepare key repository for Fetnet token authenticator
         run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(self.ctx, client,
@@ -182,9 +181,9 @@ class Keystone_v3(Task):
                               '--keystone-user', 'keystone',
                               '--keystone-group', 'keystone'])
         run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', 'credential_setup', 
-                            '--keystone-user', 'keystone', 
-                            '--keystone-group', 'keystone']) 
+                             ['keystone-manage', 'credential_setup',
+                              '--keystone-user', 'keystone',
+                              '--keystone-group', 'keystone'])
 
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'bootstrap',
