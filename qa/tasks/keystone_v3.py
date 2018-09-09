@@ -178,8 +178,8 @@ class Keystone_v3(Task):
         run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'fernet_setup'])
-        run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage', 'credential_setup'])
+        # run_in_keystone_venv(self.ctx, client,
+        #                      ['keystone-manage', 'credential_setup'])
 
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage',
@@ -207,7 +207,8 @@ class Keystone_v3(Task):
 
         run_in_keystone_venv(self.ctx, client,
                              ['sudo', 'cp',
-                                 '{kr}/*'.format(kr=keyrepo_dir), '/etc/keystone/fernet-keys/']
+                              '{kr}/ets/fernet-keys/*'.format(kr=get_keystone_dir(self.ctx)),
+                              '/etc/keystone/fernet-keys/']
                              )
         run_in_keystone_venv(self.ctx, client,
                              ['sudo', 'chown', 'ubuntu',
