@@ -49,8 +49,6 @@ class Keystone_v3(Task):
         log.info('End keystone task...')
         for (client, _) in self.config.items():
             run_in_keystone_venv(self.ctx, client,
-                                 ['sudo', 'systemctl', 'stop', 'httpd.service'])
-            run_in_keystone_venv(self.ctx, client,
                                  ['sudo', 'service', 'mariadb', 'stop'])
 
     def install_packages(self, client):
@@ -181,39 +179,15 @@ class Keystone_v3(Task):
         # run_in_keystone_venv(self.ctx, client,
         #                      ['keystone-manage', 'credential_setup'])
 
-        run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage',
-                              '--config-dir', '{kdir}/etc'.format(
-                                  kdir=get_keystone_dir(self.ctx)),
-                              '--config-dir', '{kdir}/etc/keystone.conf'.format(
-                                  kdir=get_keystone_dir(self.ctx)),
-                              'bootstrap',
-                              '--bootstrap-password', "ADMIN",
-                              '--bootstrap-username', 'admin',
-                              '--bootstrap-project-name', 'admin',
-                              '--bootstrap-role-name', 'admin',
-                              '--bootstrap-service-name', 'keystone',
-                              '--bootstrap-region-id', 'RegionOne',
-                              '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
-                                  host=admin_host),
-                              '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
-                                  host=admin_host),
-                              '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
-                                  host=admin_host),
+        self.ctx.cluster.only(client).run(
+                             args=['sudo', 'mkdir', '-p', '/etc/keystone/'])
+
+        self.ctx.cluster.only(client).run(
+                             args=['sudo', 'ln', '-s',
+                              '{kr}/etc/fernet-keys'.format(kr=get_keystone_dir(self.ctx)),
+                              '/etc/keystone/'
                               ])
 
-        self.ctx.cluster.only(client).run(
-                             ['sudo', 'mkdir', '-p', '/etc/keystone/'])
-
-        self.ctx.cluster.only(client).run(
-                             ['sudo', 'ln', '-s',
-                              '{kr}/etc/fernet-keys'.format(kr=get_keystone_dir(self.ctx)),
-                              '/etc/keystone/']
-                             )
-        self.ctx.cluster.only(client).run(
-                             ['sudo', 'chown', 'ubuntu',
-                                 '/etc/keystone/fernet-keys/*']
-                             )
 
     def run_keystone(self, client):
         log.info('Run keystone...')
@@ -270,11 +244,29 @@ class Keystone_v3(Task):
         # sleep driven synchronization
         run_in_keystone_venv(self.ctx, client, ['sleep', '15'])
 
-        # # start httpd
-        # run_in_keystone_venv(self.ctx, client,
-        #                      ['sudo', 'systemctl', 'enable', 'httpd.service'])
-        # run_in_keystone_venv(self.ctx, client,
-        #                      ['sudo', 'systemctl', 'start', 'httpd.service'])
+        run_in_keystone_venv(self.ctx, client,
+                             ['keystone-manage',
+                              '--config-dir', '{kdir}/etc'.format(
+                                  kdir=get_keystone_dir(self.ctx)),
+                              '--config-dir', '{kdir}/etc/keystone.conf'.format(
+                                  kdir=get_keystone_dir(self.ctx)),
+                              'bootstrap',
+                              '--bootstrap-password', "ADMIN",
+                            #   '--bootstrap-username', 'admin',
+                            #   '--bootstrap-project-name', 'admin',
+                            #   '--bootstrap-role-name', 'admin',
+                            #   '--bootstrap-service-name', 'keystone',
+                            #   '--bootstrap-region-id', 'RegionOne',
+                              '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
+                                  host=admin_host),
+                              '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
+                                  host=admin_host),
+                              '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
+                                  host=admin_host),
+                              ])
+
+
+
 
         run_in_keystone_venv(self.ctx, client,
                              ['openstack', 'project', 'create',
