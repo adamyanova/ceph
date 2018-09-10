@@ -200,7 +200,7 @@ class Keystone_v3(Task):
 
         # start the public endpoint
         self.client_public_with_id = 'keystone.public' + '.' + client_id
-        client_public_with_cluster = cluster_name + '.' + client_public_with_id
+        client_public_with_cluster = cluster_name + '.' + self.client_public_with_id
 
         public_host, public_port = self.ctx.keystone.public_endpoints[client]
         run_cmd = get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-public',
