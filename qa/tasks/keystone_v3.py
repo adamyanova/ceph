@@ -51,6 +51,14 @@ class Keystone_v3(Task):
             run_in_keystone_venv(self.ctx, client,
                                  ['sudo', 'service', 'mariadb', 'stop'])
 
+        log.info('Stopping Keystone admin instance')
+        self.ctx.daemons.get_daemon('keystone', self.client_admin_with_id,
+                            'ceph').stop()
+
+        self.log.info('Stopping Keystone public instance')
+        self.ctx.daemons.get_daemon('keystone', self.client_public_with_id,
+                            'ceph').stop()
+
     def install_packages(self, client):
         """
         Download the packaged dependencies of Keystone.
@@ -191,7 +199,7 @@ class Keystone_v3(Task):
         cluster_name, _, client_id = teuthology.split_role(client)
 
         # start the public endpoint
-        client_public_with_id = 'keystone.public' + '.' + client_id
+        self.client_public_with_id = 'keystone.public' + '.' + client_id
         client_public_with_cluster = cluster_name + '.' + client_public_with_id
 
         public_host, public_port = self.ctx.keystone.public_endpoints[client]
@@ -206,7 +214,7 @@ class Keystone_v3(Task):
                                            ]
                                           )
         self.ctx.daemons.add_daemon(
-            remote, 'keystone', client_public_with_id,
+            remote, 'keystone', self.client_public_with_id,
             cluster=cluster_name,
             args=run_cmd,
             logger=log.getChild(client),
@@ -217,7 +225,7 @@ class Keystone_v3(Task):
         )
 
         # start the admin endpoint
-        client_admin_with_id = 'keystone.admin' + '.' + client_id
+        self.client_admin_with_id = 'keystone.admin' + '.' + client_id
 
         admin_host, admin_port = self.ctx.keystone.admin_endpoints[client]
         run_cmd = get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-admin',
@@ -226,7 +234,7 @@ class Keystone_v3(Task):
                                            ]
                                           )
         self.ctx.daemons.add_daemon(
-            remote, 'keystone', client_admin_with_id,
+            remote, 'keystone', self.client_admin_with_id,
             cluster=cluster_name,
             args=run_cmd,
             logger=log.getChild(client),
@@ -263,6 +271,14 @@ class Keystone_v3(Task):
         args += self.read_admin_overrides(client)
         run_in_keystone_venv(self.ctx, client,
                              args=args)
+
+        run_in_keystone_venv(self.ctx, client,
+                            ['openstack', 'service', 'create',
+                             '--name', 'swift', 'object-store',
+                             '--os-auth-url', 'http://{host}:35357/v3/'.format(
+                    host=admin_host),
+                             '--os-password', 'ADMIN',
+                            ])
 
     def read_admin_overrides(self, client):
         extra_args = []
