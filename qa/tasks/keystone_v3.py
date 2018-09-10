@@ -136,34 +136,31 @@ class Keystone_v3(Task):
                                 'etc/keystone.conf.sample',
                                 'etc/keystone.conf'
                              ])
+        # for some reason it's no reading the keys from here
         # run_in_keystone_dir(self.ctx, client,
-        #                     [
-        #                         'sed',
-        #                         '-e', 's/#admin_token =.*/admin_token = ADMIN/',
+        #                     ['sed',
+        #                         '-e', 's^#key_repository =.*^key_repository = {kr}^'.format(
+        #                             kr=keyrepo_dir),
         #                         '-i', 'etc/keystone.conf'
-        #                     ])
-        run_in_keystone_dir(self.ctx, client,
-                            ['sed',
-                                '-e', 's^#key_repository =.*^key_repository = {kr}^'.format(
-                                    kr=keyrepo_dir),
-                                '-i', 'etc/keystone.conf'
-                             ])
-        run_in_keystone_venv(self.ctx, client,
-                             ['sudo', 'sed',
-                              '-e', 's^#*ServerName = .*^ServerName {host}^'.format(
-                                  host=admin_host),
-                              '-i', '/etc/httpd/conf/httpd.conf'
-                              ])
+        #                      ])
+        # run_in_keystone_venv(self.ctx, client,
+        #                      ['sudo', 'sed',
+        #                       '-e', 's^#*ServerName = .*^ServerName {host}^'.format(
+        #                           host=admin_host),
+        #                       '-i', '/etc/httpd/conf/httpd.conf'
+        #                       ])
 
         # setup MariaDB
         run_in_keystone_venv(self.ctx, client,
                              ['sudo', 'service', 'mariadb', 'start'])
-        # TODO: make sure mariadb service is running
+        remote_user = teuthology.get_test_user()
         mdbargs = "CREATE DATABASE keystone;" + \
             "GRANT ALL PRIVILEGES ON keystone.* " + \
-            "TO \'ubuntu\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\';" + \
+            "TO \'{remote}\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\';".format(remote=remote_user) + \
             "GRANT ALL PRIVILEGES ON keystone.* " + \
-            "TO \'ubuntu\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\';"
+            "TO \'{remote}\'@\'%\' IDENTIFIED BY \'KEYSTONE_DBPASS\';".format(
+                remote=remote_user)
+
         run_in_keystone_venv(self.ctx, client,
                              ['mysql', '-u', 'root', '-e',
                               mdbargs
@@ -176,18 +173,16 @@ class Keystone_v3(Task):
         run_in_keystone_dir(self.ctx, client, ['mkdir', '-p', keyrepo_dir])
         run_in_keystone_venv(self.ctx, client,
                              ['keystone-manage', 'fernet_setup'])
-        # run_in_keystone_venv(self.ctx, client,
-        #                      ['keystone-manage', 'credential_setup'])
+
+        # wsgi want to read the fernet keys from /etc/keystone/fernet-keys
+        self.ctx.cluster.only(client).run(
+            args=['sudo', 'mkdir', '-p', '/etc/keystone/'])
 
         self.ctx.cluster.only(client).run(
-                             args=['sudo', 'mkdir', '-p', '/etc/keystone/'])
-
-        self.ctx.cluster.only(client).run(
-                             args=['sudo', 'ln', '-s',
-                              '{kr}/etc/fernet-keys'.format(kr=get_keystone_dir(self.ctx)),
-                              '/etc/keystone/'
-                              ])
-
+            args=['sudo', 'ln', '-s',
+                  '{kr}/etc/fernet-keys'.format(kr=get_keystone_dir(self.ctx)),
+                  '/etc/keystone/'
+                  ])
 
     def run_keystone(self, client):
         log.info('Run keystone...')
@@ -244,42 +239,39 @@ class Keystone_v3(Task):
         # sleep driven synchronization
         run_in_keystone_venv(self.ctx, client, ['sleep', '15'])
 
+        # bootstraping keystone creates the default admin user, project and role
+        # as well as the identity service; it's recommended to create also the
+        # endpoints at the bootstrap.
+        # the default password is ADMIN and the default region will be RegionOne,
+        # however they get overridden by admin options in the yaml file with the 
+        # same keys e.g. region-id: OtherRegion 
+        args = ['keystone-manage',
+                '--config-dir', '{kdir}/etc'.format(
+                    kdir=get_keystone_dir(self.ctx)),
+                '--config-dir', '{kdir}/etc/keystone.conf'.format(
+                    kdir=get_keystone_dir(self.ctx)),
+                'bootstrap',
+                '--bootstrap-password', "ADMIN",
+                '--bootstrap-region-id', 'RegionOne'
+                '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
+                    host=admin_host),
+                '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
+                    host=admin_host),
+                '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
+                    host=admin_host),
+                ]
+        args += self.read_admin_overrides(client)
         run_in_keystone_venv(self.ctx, client,
-                             ['keystone-manage',
-                              '--config-dir', '{kdir}/etc'.format(
-                                  kdir=get_keystone_dir(self.ctx)),
-                              '--config-dir', '{kdir}/etc/keystone.conf'.format(
-                                  kdir=get_keystone_dir(self.ctx)),
-                              'bootstrap',
-                              '--bootstrap-password', "ADMIN",
-                            #   '--bootstrap-username', 'admin',
-                            #   '--bootstrap-project-name', 'admin',
-                            #   '--bootstrap-role-name', 'admin',
-                            #   '--bootstrap-service-name', 'keystone',
-                            #   '--bootstrap-region-id', 'RegionOne',
-                              '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
-                                  host=admin_host),
-                              '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
-                                  host=admin_host),
-                              '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
-                                  host=admin_host),
-                              ])
+                             args=args)
 
-
-
-
-        run_in_keystone_venv(self.ctx, client,
-                             ['openstack', 'project', 'create',
-                              '--domain', 'default',
-                              '--description',
-                              "Service Project", 'service'
-                              ])
-        run_in_keystone_venv(self.ctx, client,
-                             ['openstack', 'project', 'create',
-                              '--domain', 'default',
-                              '--description',
-                              "Demo Project", 'demo'
-                              ])
+    def read_admin_overrides(self, client):
+        extra_args = []
+        if client in self.config and self.config[client] is not None:
+            if 'admin-overrides' in self.config[client]:
+                for (key, value) in self.config[client]['admin-overrides']:
+                    extra_args.append('--bootstrap-{k}'.format(k=key))
+                    extra_args.append(value)
+        return extra_args
 
 
 def assign_ports(ctx, config, initial_port):
