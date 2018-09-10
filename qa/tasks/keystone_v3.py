@@ -53,11 +53,11 @@ class Keystone_v3(Task):
 
         log.info('Stopping Keystone admin instance')
         self.ctx.daemons.get_daemon('keystone', self.client_admin_with_id,
-                            'ceph').stop()
+                                    'ceph').stop()
 
         self.log.info('Stopping Keystone public instance')
         self.ctx.daemons.get_daemon('keystone', self.client_public_with_id,
-                            'ceph').stop()
+                                    'ceph').stop()
 
     def install_packages(self, client):
         """
@@ -251,8 +251,8 @@ class Keystone_v3(Task):
         # as well as the identity service; it's recommended to create also the
         # endpoints at the bootstrap.
         # the default password is ADMIN and the default region will be RegionOne,
-        # however they get overridden by admin options in the yaml file with the 
-        # same keys e.g. region-id: OtherRegion 
+        # however they get overridden by admin options in the yaml file with the
+        # same keys e.g. region-id: OtherRegion
         args = ['keystone-manage',
                 '--config-dir', '{kdir}/etc'.format(
                     kdir=get_keystone_dir(self.ctx)),
@@ -273,12 +273,12 @@ class Keystone_v3(Task):
                              args=args)
 
         run_in_keystone_venv(self.ctx, client,
-                            ['openstack', 'service', 'create',
-                             '--name', 'swift', 'object-store',
-                             '--os-auth-url', 'http://{host}:35357/v3/'.format(
-                    host=admin_host),
-                             '--os-password', 'ADMIN',
-                            ])
+                             ['openstack', 'service', 'create',
+                              '--os-auth-url', 'http://{host}:35357/v3/'.format(
+                                  host=admin_host),
+                              '--os-password', 'ADMIN',
+                              '--name', 'swift', 'object-store',
+                              ])
 
     def read_admin_overrides(self, client):
         extra_args = []
