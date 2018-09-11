@@ -261,11 +261,12 @@ class Keystone_v3(Task):
                 'bootstrap',
                 '--bootstrap-password', "ADMIN",
                 '--bootstrap-region-id', 'RegionOne',
-                '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
+                '--bootstrap-service-name', 'keystone',
+                '--bootstrap-admin-url', 'http://{host}:35357/'.format(
                     host=admin_host),
-                '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
+                '--bootstrap-internal-url', 'http://{host}:5000/'.format(
                     host=admin_host),
-                '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
+                '--bootstrap-public-url', 'http://{host}:5000/'.format(
                     host=admin_host),
                 ]
         args += self.read_admin_overrides(client)
@@ -274,13 +275,14 @@ class Keystone_v3(Task):
 
         run_in_keystone_venv(self.ctx, client,
                              ['openstack', 'service', 'create',
-                              '--os-auth-url', 'http://{host}:35357/v3/'.format(
+                              '--os-auth-url', 'http://{host}:35357/'.format(
                                   host=admin_host),
                               '--os-password', 'ADMIN',
-                            #   '--os-project-domain-name', 'default',
-                            #   '--os-user-domain-name', 'default',
-                            #   '--os-project-name', 'admin',
+                              '--os-project-domain-id', 'default',
+                              '--os-user-domain-id', 'default',
+                              '--os-project-name', 'admin',
                               '--os-username', 'admin',
+                              '--os-identity-api-version', '3',
                               '--name', 'swift', 'object-store',
 
                               ])
