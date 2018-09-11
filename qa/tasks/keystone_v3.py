@@ -145,12 +145,12 @@ class Keystone_v3(Task):
                                 'etc/keystone.conf'
                              ])
         # for some reason it's no reading the keys from here
-        # run_in_keystone_dir(self.ctx, client,
-        #                     ['sed',
-        #                         '-e', 's^#key_repository =.*^key_repository = {kr}^'.format(
-        #                             kr=keyrepo_dir),
-        #                         '-i', 'etc/keystone.conf'
-        #                      ])
+        run_in_keystone_dir(self.ctx, client,
+                            ['sed',
+                                '-e', 's^#key_repository =.*^key_repository = {kr}^'.format(
+                                    kr=keyrepo_dir),
+                                '-i', 'etc/keystone.conf'
+                             ])
         # run_in_keystone_venv(self.ctx, client,
         #                      ['sudo', 'sed',
         #                       '-e', 's^#*ServerName = .*^ServerName {host}^'.format(
