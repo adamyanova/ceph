@@ -260,7 +260,7 @@ class Keystone_v3(Task):
                     kdir=get_keystone_dir(self.ctx)),
                 'bootstrap',
                 '--bootstrap-password', "ADMIN",
-                '--bootstrap-region-id', 'RegionOne'
+                '--bootstrap-region-id', 'RegionOne',
                 '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
                     host=admin_host),
                 '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
