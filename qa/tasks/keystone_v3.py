@@ -277,7 +277,12 @@ class Keystone_v3(Task):
                               '--os-auth-url', 'http://{host}:35357/v3/'.format(
                                   host=admin_host),
                               '--os-password', 'ADMIN',
+                            #   '--os-project-domain-name', 'default',
+                            #   '--os-user-domain-name', 'default',
+                            #   '--os-project-name', 'admin',
+                              '--os-username', 'admin',
                               '--name', 'swift', 'object-store',
+
                               ])
 
     def read_admin_overrides(self, client):
