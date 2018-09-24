@@ -4,4 +4,3 @@ tasks:
         force-branch: wip
         force-repo: 'https://github.com/adamyanova/java_s3tests.git'
         log-fwd: '../s3tests-java.log'
-        # extra-args: ['--tests', 'AWS4Test.*']
