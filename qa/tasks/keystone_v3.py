@@ -312,6 +312,8 @@ class Keystone_v3(Task):
         self.ctx.cluster.only(client).run(
             args=[ 'rm', '-rf', keystonedir ],
         )
+        self.ctx.cluster.only(client).run(
+            args=['sudo', 'rm', '-rf', '/etc/keystone'])
 
     def remove_dependencies(self, client):
         log.debug('Removing dependencies')
