@@ -282,6 +282,8 @@ class Keystone_v3(Task):
                               '--name', 'swift', 'object-store',
 
                               ])
+        # for the deferred endpoint creation; currently it's used in rgw.py
+        self.ctx.keystone.create_endpoint = create_endpoint
 
     def read_admin_overrides(self, client):
         extra_args = []
@@ -291,14 +293,6 @@ class Keystone_v3(Task):
                     extra_args.append('--bootstrap-{k}'.format(k=key))
                     extra_args.append(value)
         return extra_args
-
-    def create_endpoint(self, ctx, cclient, service, url):
-        endpoint_section = {
-            'service': service,
-            'publicurl': url,
-        }
-        return run_section_cmds(ctx, cclient, 'endpoint create', 'service',
-                                [ endpoint_section ])
 
     def stop_keystone(self, client):
         cluster_name, _, client_id = teuthology.split_role(client)
@@ -367,9 +361,16 @@ def get_keystone_venved_cmd(ctx, cmd, args):
     kbindir = get_keystone_dir(ctx) + '/.tox/venv/bin/'
     return [kbindir + 'python', kbindir + cmd] + args
 
-
 def get_toxvenv_dir(ctx):
     return ctx.tox.venv_path
+
+def create_endpoint(ctx, cclient, service, url):
+    endpoint_section = {
+        'service': service,
+        'publicurl': url,
+    }
+    return run_section_cmds(ctx, cclient, 'endpoint create', 'service',
+                            [ endpoint_section ])
 
 def run_section_cmds(ctx, cclient, section_cmd, special,
                      section_config_list):
