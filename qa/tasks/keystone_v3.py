@@ -50,14 +50,9 @@ class Keystone_v3(Task):
         for (client, _) in self.config.items():
             run_in_keystone_venv(self.ctx, client,
                                  ['sudo', 'service', 'mariadb', 'stop'])
-
-        log.info('Stopping Keystone admin instance')
-        self.ctx.daemons.get_daemon('keystone', self.client_admin_with_id,
-                                    'ceph').stop()
-
-        self.log.info('Stopping Keystone public instance')
-        self.ctx.daemons.get_daemon('keystone', self.client_public_with_id,
-                                    'ceph').stop()
+            self.stop_keystone(client)
+            # self.remove_dependencies(client)
+            self.remove_keystone(client)
 
     def install_packages(self, client):
         """
@@ -199,8 +194,8 @@ class Keystone_v3(Task):
         cluster_name, _, client_id = teuthology.split_role(client)
 
         # start the public endpoint
-        self.client_public_with_id = 'keystone.public' + '.' + client_id
-        client_public_with_cluster = cluster_name + '.' + self.client_public_with_id
+        client_public_with_id = 'keystone.public' + '.' + client_id
+        # client_public_with_cluster = cluster_name + '.' + client_public_with_id
 
         public_host, public_port = self.ctx.keystone.public_endpoints[client]
         run_cmd = get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-public',
@@ -214,7 +209,7 @@ class Keystone_v3(Task):
                                            ]
                                           )
         self.ctx.daemons.add_daemon(
-            remote, 'keystone', self.client_public_with_id,
+            remote, 'keystone', client_public_with_id,
             cluster=cluster_name,
             args=run_cmd,
             logger=log.getChild(client),
@@ -225,7 +220,7 @@ class Keystone_v3(Task):
         )
 
         # start the admin endpoint
-        self.client_admin_with_id = 'keystone.admin' + '.' + client_id
+        client_admin_with_id = 'keystone.admin' + '.' + client_id
 
         admin_host, admin_port = self.ctx.keystone.admin_endpoints[client]
         run_cmd = get_keystone_venved_cmd(self.ctx, 'keystone-wsgi-admin',
@@ -234,7 +229,7 @@ class Keystone_v3(Task):
                                            ]
                                           )
         self.ctx.daemons.add_daemon(
-            remote, 'keystone', self.client_admin_with_id,
+            remote, 'keystone', client_admin_with_id,
             cluster=cluster_name,
             args=run_cmd,
             logger=log.getChild(client),
@@ -295,6 +290,33 @@ class Keystone_v3(Task):
                     extra_args.append('--bootstrap-{k}'.format(k=key))
                     extra_args.append(value)
         return extra_args
+
+    def stop_keystone(self, client):
+        cluster_name, _, client_id = teuthology.split_role(client)
+        client_public_with_id = 'keystone.public' + '.' + client_id
+        client_admin_with_id = 'keystone.admin' + '.' + client_id
+
+        log.info('Stopping Keystone admin instance')
+        self.ctx.daemons.get_daemon('keystone', client_admin_with_id,
+                               cluster_name).stop()
+
+        log.info('Stopping Keystone public instance')
+        self.ctx.daemons.get_daemon('keystone', client_public_with_id,
+                               cluster_name).stop()
+
+
+    def remove_keystone(self, client):
+        log.debug('Removing keystone')
+        keystonedir = get_keystone_dir(self.ctx)
+        self.ctx.cluster.only(client).run(
+            args=[ 'rm', '-rf', keystonedir ],
+        )
+
+    def remove_dependencies(self, client):
+        log.debug('Removing dependencies')
+        (remote,) = self.ctx.cluster.only(client).remotes.iterkeys()
+        for dep in self.deps[remote.os.package_type]:
+            remove_package(dep, remote)
 
 
 def assign_ports(ctx, config, initial_port):
