@@ -52,6 +52,7 @@ class Keystone_v3(Task):
                                  ['sudo', 'service', 'mariadb', 'stop'])
             self.stop_keystone(client)
             # self.remove_dependencies(client)
+            # TODO: cleanup and stop mariadb
             self.remove_keystone(client)
 
     def install_packages(self, client):
@@ -157,7 +158,7 @@ class Keystone_v3(Task):
         run_in_keystone_venv(self.ctx, client,
                              ['sudo', 'service', 'mariadb', 'start'])
         remote_user = teuthology.get_test_user()
-        mdbargs = "CREATE DATABASE keystone;" + \
+        mdbargs = "DROP DATABASE IF EXISTS keystone;" + "CREATE DATABASE keystone;" + \
             "GRANT ALL PRIVILEGES ON keystone.* " + \
             "TO \'{remote}\'@\'localhost\' IDENTIFIED BY \'KEYSTONE_DBPASS\';".format(remote=remote_user) + \
             "GRANT ALL PRIVILEGES ON keystone.* " + \
