@@ -360,5 +360,46 @@ def get_keystone_venved_cmd(ctx, cmd, args):
 def get_toxvenv_dir(ctx):
     return ctx.tox.venv_path
 
+def run_section_cmds(ctx, cclient, section_cmd, special,
+                     section_config_list):
+    admin_host, admin_port = ctx.keystone.admin_endpoints[cclient]
+
+    auth_section = [
+        ( 'os-token', 'ADMIN' ),
+        ( 'os-url', 'http://{host}:{port}/v2.0'.format(host=admin_host,
+                                                       port=admin_port) ),
+    ]
+
+    for section_item in section_config_list:
+        run_in_keystone_venv(ctx, cclient,
+            [ 'openstack' ] + section_cmd.split() +
+            dict_to_args(special, auth_section + section_item.items()))
+
+
+def create_endpoint(ctx, cclient, service, url):
+    endpoint_section = {
+        'service': service,
+        'publicurl': url,
+    }
+    return run_section_cmds(ctx, cclient, 'endpoint create', 'service',
+                            [ endpoint_section ])
+
+def dict_to_args(special, items):
+    """
+    Transform
+        [(key1, val1), (special, val_special), (key3, val3) ]
+    into:
+        [ '--key1', 'val1', '--key3', 'val3', 'val_special' ]
+    """
+    args=[]
+    for (k, v) in items:
+        if k == special:
+            special_val = v
+        else:
+            args.append('--{k}'.format(k=k))
+            args.append(v)
+    if special_val:
+        args.append(special_val)
+    return args                      
 
 task = Keystone_v3
