@@ -292,6 +292,14 @@ class Keystone_v3(Task):
                     extra_args.append(value)
         return extra_args
 
+    def create_endpoint(self, ctx, cclient, service, url):
+        endpoint_section = {
+            'service': service,
+            'publicurl': url,
+        }
+        return run_section_cmds(ctx, cclient, 'endpoint create', 'service',
+                                [ endpoint_section ])
+
     def stop_keystone(self, client):
         cluster_name, _, client_id = teuthology.split_role(client)
         client_public_with_id = 'keystone.public' + '.' + client_id
@@ -377,15 +385,6 @@ def run_section_cmds(ctx, cclient, section_cmd, special,
         run_in_keystone_venv(ctx, cclient,
             [ 'openstack' ] + section_cmd.split() +
             dict_to_args(special, auth_section + section_item.items()))
-
-
-def create_endpoint(ctx, cclient, service, url):
-    endpoint_section = {
-        'service': service,
-        'publicurl': url,
-    }
-    return run_section_cmds(ctx, cclient, 'endpoint create', 'service',
-                            [ endpoint_section ])
 
 def dict_to_args(special, items):
     """
