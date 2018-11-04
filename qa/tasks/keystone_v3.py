@@ -301,18 +301,17 @@ class Keystone_v3(Task):
 
         log.info('Stopping Keystone admin instance')
         self.ctx.daemons.get_daemon('keystone', client_admin_with_id,
-                               cluster_name).stop()
+                                    cluster_name).stop()
 
         log.info('Stopping Keystone public instance')
         self.ctx.daemons.get_daemon('keystone', client_public_with_id,
-                               cluster_name).stop()
-
+                                    cluster_name).stop()
 
     def remove_keystone(self, client):
         log.debug('Removing keystone')
         keystonedir = get_keystone_dir(self.ctx)
         self.ctx.cluster.only(client).run(
-            args=[ 'rm', '-rf', keystonedir ],
+            args=['rm', '-rf', keystonedir],
         )
         self.ctx.cluster.only(client).run(
             args=['sudo', 'rm', '-rf', '/etc/keystone'])
@@ -361,48 +360,26 @@ def get_keystone_venved_cmd(ctx, cmd, args):
     kbindir = get_keystone_dir(ctx) + '/.tox/venv/bin/'
     return [kbindir + 'python', kbindir + cmd] + args
 
+
 def get_toxvenv_dir(ctx):
     return ctx.tox.venv_path
 
+
 def create_endpoint(ctx, cclient, service, url):
-    endpoint_section = {
-        'service': service,
-        'publicurl': url,
-    }
-    return run_section_cmds(ctx, cclient, 'endpoint create', 'service',
-                            [ endpoint_section ])
-
-def run_section_cmds(ctx, cclient, section_cmd, special,
-                     section_config_list):
     admin_host, admin_port = ctx.keystone.admin_endpoints[cclient]
+    args = ['openstack',
+            '--os-auth-url', 'http://{host}:35357/'.format(
+                host=admin_host),
+            '--os-password', 'ADMIN',
+            '--os-project-domain-id', 'default',
+            '--os-user-domain-id', 'default',
+            '--os-project-name', 'admin',
+            '--os-username', 'admin',
+            '--os-identity-api-version', '3']
 
-    auth_section = [
-        ( 'os-token', 'ADMIN' ),
-        ( 'os-url', 'http://{host}:{port}/v2.0'.format(host=admin_host,
-                                                       port=admin_port) ),
-    ]
+    args.extend(['endpoint', 'create', service, 'public', url])
 
-    for section_item in section_config_list:
-        run_in_keystone_venv(ctx, cclient,
-            [ 'openstack' ] + section_cmd.split() +
-            dict_to_args(special, auth_section + section_item.items()))
+    run_in_keystone_venv(ctx, cclient, args)
 
-def dict_to_args(special, items):
-    """
-    Transform
-        [(key1, val1), (special, val_special), (key3, val3) ]
-    into:
-        [ '--key1', 'val1', '--key3', 'val3', 'val_special' ]
-    """
-    args=[]
-    for (k, v) in items:
-        if k == special:
-            special_val = v
-        else:
-            args.append('--{k}'.format(k=k))
-            args.append(v)
-    if special_val:
-        args.append(special_val)
-    return args                      
 
 task = Keystone_v3
