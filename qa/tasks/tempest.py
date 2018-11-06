@@ -136,6 +136,12 @@ def configure_instance(ctx, config):
         cpar.write(file(local_conf, 'w+'))
 
         remote.put_file(local_conf, tetcdir + '/tempest.conf')
+        ctx.cluster.only(client).run(
+            args=['sudo', 'mkdir', '-p', '/etc/tempest/',
+                run.Raw('&&'),
+                'sudo', 'cp', '{cdir}/tempest.conf'.format(cdir=tetcdir), '/etc/tempest/'
+            ])
+            
     yield
 
 @contextlib.contextmanager
