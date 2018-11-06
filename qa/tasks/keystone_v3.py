@@ -140,6 +140,12 @@ class Keystone_v3(Task):
                                 'etc/keystone.conf.sample',
                                 'etc/keystone.conf'
                              ])
+        run_in_keystone_dir(ctx, client,
+                            [
+                                'sed',
+                                '-e', 's/#admin_token =.*/admin_token = ADMIN/',
+                                '-i', 'etc/keystone.conf'
+                            ])
         # for some reason it's no reading the keys from here
         run_in_keystone_dir(self.ctx, client,
                             ['sed',
@@ -260,11 +266,11 @@ class Keystone_v3(Task):
                 '--bootstrap-password', "ADMIN",
                 '--bootstrap-region-id', 'RegionOne',
                 '--bootstrap-service-name', 'keystone',
-                '--bootstrap-admin-url', 'http://{host}:35357/v3/'.format(
+                '--bootstrap-admin-url', 'http://{host}:35357/'.format(
                     host=admin_host),
-                '--bootstrap-internal-url', 'http://{host}:5000/v3/'.format(
+                '--bootstrap-internal-url', 'http://{host}:5000/'.format(
                     host=admin_host),
-                '--bootstrap-public-url', 'http://{host}:5000/v3/'.format(
+                '--bootstrap-public-url', 'http://{host}:5000/'.format(
                     host=admin_host),
                 ]
         args += self.read_admin_overrides(client)
@@ -273,7 +279,7 @@ class Keystone_v3(Task):
 
         run_in_keystone_venv(self.ctx, client,
                              ['openstack', 'service', 'create',
-                              '--os-auth-url', 'http://{host}:35357/v3/'.format(
+                              '--os-auth-url', 'http://{host}:35357/'.format(
                                   host=admin_host),
                               '--os-password', 'ADMIN',
                               '--os-project-domain-id', 'default',
@@ -369,7 +375,7 @@ def get_toxvenv_dir(ctx):
 def create_endpoint(ctx, cclient, service, url):
     admin_host, admin_port = ctx.keystone.admin_endpoints[cclient]
     args = ['openstack',
-            '--os-auth-url', 'http://{host}:35357/v3/'.format(
+            '--os-auth-url', 'http://{host}:35357/'.format(
                 host=admin_host),
             '--os-password', 'ADMIN',
             '--os-project-domain-id', 'default',

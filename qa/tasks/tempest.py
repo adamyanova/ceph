@@ -141,7 +141,7 @@ def configure_instance(ctx, config):
 @contextlib.contextmanager
 def run_tempest(ctx, config):
     assert isinstance(config, dict)
-    log.info('Configuring Tempest')
+    log.info('Running Tempest')
 
     for (client, cconf) in config.items():
         blacklist = cconf.get('blacklist', [])
