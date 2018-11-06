@@ -140,7 +140,7 @@ class Keystone_v3(Task):
                                 'etc/keystone.conf.sample',
                                 'etc/keystone.conf'
                              ])
-        run_in_keystone_dir(ctx, client,
+        run_in_keystone_dir(self.ctx, client,
                             [
                                 'sed',
                                 '-e', 's/#admin_token =.*/admin_token = ADMIN/',
